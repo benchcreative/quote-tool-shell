@@ -99,11 +99,6 @@ function formatPropertySize(value) {
   return map[value] || value || "Not provided";
 }
 
-function formatDistanceBand(value) {
-  const bands = currentConfig?.pricing?.distanceBands || {};
-  return bands[value]?.label || "Not provided";
-}
-
 function formatExtras(values) {
   if (!Array.isArray(values) || values.length === 0) {
     return "None selected";
@@ -111,22 +106,12 @@ function formatExtras(values) {
 
   const map = {
     full_packing: "Packing",
-    fragile_packing: "Fragile packing",
+    fragile_packing: "Fragile",
     dismantling: "Disassembly",
     none: "No extras"
   };
 
   return values.map((value) => map[value] || value).join(", ");
-}
-
-function formatAccess(value) {
-  const map = {
-    easy_access: "Easy access / driveway",
-    one_flight: "One flight of stairs",
-    multiple_flights: "Multiple flights / no lift",
-    restricted_parking: "Restricted parking / difficult access"
-  };
-  return map[value] || "Not provided";
 }
 
 function formatMoveDateSummary() {
@@ -161,6 +146,14 @@ function getDistanceBandFromMiles(miles) {
   if (miles <= 100) return "band_50_100";
   if (miles <= 150) return "band_100_150";
   return "band_150_plus";
+}
+
+function getLargeItemsCount() {
+  return Number(state.answers.large_items || 0);
+}
+
+function getBoxesCount() {
+  return Number(state.answers.boxes || 0);
 }
 
 async function calculateRouteDistanceMiles() {
@@ -206,6 +199,7 @@ function calculateEstimate() {
   const distanceBands = pricing.distanceBands || {};
   const extrasPricing = pricing.extras || {};
   const accessPricing = pricing.access || {};
+  const volumeAdjustments = pricing.volumeAdjustments || {};
   const rangePercent = pricing.rangePercent || 12;
 
   const propertySize = state.answers.property_size;
@@ -222,6 +216,9 @@ function calculateEstimate() {
       total += extrasPricing[extra] || 0;
     });
   }
+
+  total += getLargeItemsCount() * (volumeAdjustments.largeItemUnit || 0);
+  total += getBoxesCount() * (volumeAdjustments.boxUnit || 0);
 
   const min = Math.round(total * (1 - rangePercent / 100));
   const max = Math.round(total * (1 + rangePercent / 100));
@@ -393,12 +390,34 @@ function renderAddresses() {
   `;
 }
 
+function renderSliderRow(label, inputId, value, min, max) {
+  return `
+    <div class="qt-slider-row">
+      <div class="qt-slider-top">
+        <span class="qt-slider-label">${label}</span>
+        <span class="qt-slider-value">${value}</span>
+      </div>
+      <input
+        class="qt-slider"
+        id="${inputId}"
+        type="range"
+        min="${min}"
+        max="${max}"
+        step="1"
+        value="${value}"
+      />
+    </div>
+  `;
+}
+
 function renderMoveDetails(step) {
   const selectedExtras = state.answers.extras || [];
   const accessValue = state.answers.access_type || "";
   const selectedType = state.answers.move_date_type || "";
   const exactDate = state.answers.exact_move_date || "";
   const approxMonth = state.answers.approx_move_month || "";
+  const largeItems = Number(state.answers.large_items ?? step.sliders[0].default ?? 0);
+  const boxes = Number(state.answers.boxes ?? step.sliders[1].default ?? 0);
 
   let extrasHtml = "";
   for (const option of step.extrasOptions) {
@@ -459,6 +478,12 @@ function renderMoveDetails(step) {
         </div>
       </div>
 
+      <div class="qt-refine-card">
+        <div class="qt-kicker">Refine your estimate (optional)</div>
+        ${renderSliderRow("Large items", "qt-large-items", largeItems, 0, 20)}
+        ${renderSliderRow("Boxes", "qt-boxes", boxes, 0, 60)}
+      </div>
+
       <div class="qt-footer-actions">
         <button class="qt-btn qt-btn-secondary" id="qt-back">Back</button>
         <button class="qt-btn qt-btn-primary" id="qt-next" ${isMoveDetailsValid() ? "" : "disabled"}>Calculate estimate</button>
@@ -473,6 +498,7 @@ function renderEstimate() {
   const toValue = getAddressLabel("moving_to");
   const propertyValue = state.answers.property_size;
   const extras = state.answers.extras || [];
+  const distanceText = getDistanceMilesText();
 
   return `
     <div class="qt-shell">
@@ -498,8 +524,20 @@ function renderEstimate() {
           <strong>${toValue || "—"}</strong>
         </div>
         <div class="qt-summary-line">
+          <span>Distance</span>
+          <strong>${distanceText || "—"}</strong>
+        </div>
+        <div class="qt-summary-line">
           <span>Extras</span>
           <strong>${extras.length ? `${extras.length} service${extras.length > 1 ? "s" : ""}` : "None"}</strong>
+        </div>
+        <div class="qt-summary-line">
+          <span>Large items</span>
+          <strong>${getLargeItemsCount()}</strong>
+        </div>
+        <div class="qt-summary-line">
+          <span>Boxes</span>
+          <strong>${getBoxesCount()}</strong>
         </div>
       </div>
 
@@ -761,6 +799,8 @@ function attachMoveDetailsEvents() {
   const extraButtons = document.querySelectorAll("[data-extra-value]");
   const accessSelect = document.getElementById("qt-access-select");
   const dateButtons = document.querySelectorAll("[data-date-type]");
+  const largeItemsInput = document.getElementById("qt-large-items");
+  const boxesInput = document.getElementById("qt-boxes");
   const nextButton = document.getElementById("qt-next");
   const backButton = document.getElementById("qt-back");
 
@@ -821,6 +861,22 @@ function attachMoveDetailsEvents() {
     approxMonthInput.addEventListener("input", function () {
       state.answers.approx_move_month = approxMonthInput.value;
       if (nextButton) nextButton.disabled = !isMoveDetailsValid();
+    });
+  }
+
+  if (largeItemsInput) {
+    largeItemsInput.addEventListener("input", function () {
+      state.answers.large_items = Number(largeItemsInput.value);
+      const valueEl = largeItemsInput.closest(".qt-slider-row")?.querySelector(".qt-slider-value");
+      if (valueEl) valueEl.textContent = largeItemsInput.value;
+    });
+  }
+
+  if (boxesInput) {
+    boxesInput.addEventListener("input", function () {
+      state.answers.boxes = Number(boxesInput.value);
+      const valueEl = boxesInput.closest(".qt-slider-row")?.querySelector(".qt-slider-value");
+      if (valueEl) valueEl.textContent = boxesInput.value;
     });
   }
 
@@ -894,9 +950,17 @@ async function initQuoteTool() {
 
   try {
     currentConfig = await loadConfig("configs/removals.json");
+
     if (!currentConfig || !currentConfig.steps || !currentConfig.steps.length) {
       throw new Error("Config is missing steps");
     }
+
+    if (typeof state.answers.large_items === "undefined") {
+      const moveDetailsStep = currentConfig.steps.find((step) => step.id === "move_details");
+      state.answers.large_items = moveDetailsStep?.sliders?.[0]?.default ?? 0;
+      state.answers.boxes = moveDetailsStep?.sliders?.[1]?.default ?? 0;
+    }
+
     renderCurrentStep();
   } catch (error) {
     console.error(error);
