@@ -81,10 +81,6 @@ body {
   gap: 16px;
 }
 
-.qt-options-single-column {
-  grid-template-columns: 1fr;
-}
-
 .qt-option {
   border: 2px solid #ddd;
   background: white;
@@ -97,6 +93,61 @@ body {
 }
 
 .qt-option.is-selected {
+  border-color: #5ba79c;
+  background: #eef8f6;
+}
+
+.qt-chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.qt-chip {
+  border: 2px solid #ddd;
+  background: white;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-size: 14px;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.qt-chip.is-selected {
+  border-color: #5ba79c;
+  background: #eef8f6;
+}
+
+.qt-select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 2px solid #ddd;
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-size: 16px;
+  background: white;
+}
+
+.qt-date-choice-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.qt-segment {
+  border: 2px solid #ddd;
+  background: white;
+  border-radius: 12px;
+  padding: 12px 10px;
+  font-size: 14px;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.qt-segment.is-selected {
   border-color: #5ba79c;
   background: #eef8f6;
 }
@@ -142,16 +193,16 @@ body {
 }
 
 .qt-date-fields {
-  margin-top: 18px;
+  margin-top: 14px;
 }
 
 .qt-section-block + .qt-section-block {
-  margin-top: 28px;
+  margin-top: 24px;
 }
 
 .qt-section-title {
   margin: 0 0 12px;
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .qt-estimate-range {
@@ -242,6 +293,10 @@ body {
   }
 
   .qt-options {
+    grid-template-columns: 1fr;
+  }
+
+  .qt-date-choice-row {
     grid-template-columns: 1fr;
   }
 
