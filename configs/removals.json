@@ -1,5 +1,21 @@
 {
   "tool": "removals",
   "name": "MoveEstimate",
-  "steps": []
+  "kicker": "Estimates in under 60 seconds",
+  "steps": [
+    {
+      "id": "property_size",
+      "type": "single-select",
+      "title": "What size property are you moving from?",
+      "subtitle": "This helps us estimate the size of the move.",
+      "options": [
+        { "label": "Studio", "value": "studio" },
+        { "label": "1 Bedroom", "value": "1_bed" },
+        { "label": "2 Bedroom", "value": "2_bed" },
+        { "label": "3 Bedroom", "value": "3_bed" },
+        { "label": "4 Bedroom", "value": "4_bed" },
+        { "label": "5+ Bedroom", "value": "5_plus" }
+      ]
+    }
+  ]
 }
