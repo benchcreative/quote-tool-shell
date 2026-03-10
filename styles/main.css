@@ -123,6 +123,10 @@ body {
   margin-top: 8px;
 }
 
+.qt-date-fields {
+  margin-top: 18px;
+}
+
 .qt-estimate-range {
   font-size: 56px;
   line-height: 1;
@@ -166,6 +170,31 @@ body {
 
 .qt-summary-row strong {
   text-align: right;
+}
+
+.qt-form-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.qt-thankyou {
+  text-align: center;
+  padding-top: 56px;
+  padding-bottom: 56px;
+}
+
+.qt-thankyou-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 18px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #5ba79c;
+  color: white;
+  font-size: 36px;
+  font-weight: 700;
 }
 
 @media (max-width: 700px) {
