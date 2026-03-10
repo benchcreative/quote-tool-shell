@@ -36,6 +36,60 @@ function renderProgress(stepNumber, totalSteps) {
   `;
 }
 
+function formatPropertySize(value) {
+  const map = {
+    studio: "Studio",
+    "1_bed": "1 Bedroom",
+    "2_bed": "2 Bedroom",
+    "3_bed": "3 Bedroom",
+    "4_bed": "4 Bedroom",
+    "5_plus": "5+ Bedroom"
+  };
+  return map[value] || value || "Not provided";
+}
+
+function formatExtras(values) {
+  if (!Array.isArray(values) || values.length === 0) {
+    return "None selected";
+  }
+
+  const map = {
+    full_packing: "Full packing service",
+    fragile_packing: "Fragile item packing",
+    dismantling: "Furniture dismantling",
+    none: "No additional services"
+  };
+
+  return values.map(value => map[value] || value).join(", ");
+}
+
+function calculateEstimate() {
+  const pricing = currentConfig.pricing || {};
+  const basePrices = pricing.basePrices || {};
+  const extrasPricing = pricing.extras || {};
+  const rangePercent = pricing.rangePercent || 15;
+
+  const propertySize = state.answers.property_size;
+  const selectedExtras = state.answers.extras || [];
+
+  let total = basePrices[propertySize] || 0;
+
+  if (Array.isArray(selectedExtras)) {
+    selectedExtras.forEach(extra => {
+      total += extrasPricing[extra] || 0;
+    });
+  }
+
+  const min = Math.round(total * (1 - rangePercent / 100));
+  const max = Math.round(total * (1 + rangePercent / 100));
+
+  return {
+    base: total,
+    min,
+    max
+  };
+}
+
 function renderSingleSelect(step, stepNumber, totalSteps) {
   const selectedValue = state.answers[step.id] || "";
 
@@ -123,6 +177,46 @@ function renderMultiSelect(step, stepNumber, totalSteps) {
   `;
 }
 
+function renderEstimate(step, stepNumber, totalSteps) {
+  const estimate = calculateEstimate();
+
+  return `
+    <div class="qt-shell">
+      ${renderProgress(stepNumber, totalSteps)}
+      <h1 class="qt-title">${step.title}</h1>
+      <p class="qt-subtitle">${step.subtitle}</p>
+
+      <div class="qt-estimate-range">£${estimate.min} — £${estimate.max}</div>
+      <p class="qt-estimate-note">This is a guide price based on the details provided so far.</p>
+
+      <div class="qt-summary">
+        <h3 class="qt-summary-title">Move summary</h3>
+        <div class="qt-summary-row">
+          <span>Property size</span>
+          <strong>${formatPropertySize(state.answers.property_size)}</strong>
+        </div>
+        <div class="qt-summary-row">
+          <span>Moving from</span>
+          <strong>${state.answers.moving_from || "Not provided"}</strong>
+        </div>
+        <div class="qt-summary-row">
+          <span>Moving to</span>
+          <strong>${state.answers.moving_to || "Not provided"}</strong>
+        </div>
+        <div class="qt-summary-row">
+          <span>Extras</span>
+          <strong>${formatExtras(state.answers.extras)}</strong>
+        </div>
+      </div>
+
+      <div class="qt-actions">
+        <button class="qt-nav qt-nav-back" id="qt-back">Back</button>
+        <button class="qt-nav qt-nav-next" id="qt-next">Continue</button>
+      </div>
+    </div>
+  `;
+}
+
 function renderStep(step, stepNumber, totalSteps) {
   if (step.type === "single-select") {
     return renderSingleSelect(step, stepNumber, totalSteps);
@@ -134,6 +228,10 @@ function renderStep(step, stepNumber, totalSteps) {
 
   if (step.type === "multi-select") {
     return renderMultiSelect(step, stepNumber, totalSteps);
+  }
+
+  if (step.type === "estimate") {
+    return renderEstimate(step, stepNumber, totalSteps);
   }
 
   return `
@@ -264,6 +362,19 @@ function attachMultiSelectEvents(step) {
   }
 }
 
+function attachEstimateEvents() {
+  const nextButton = document.getElementById("qt-next");
+  const backButton = document.getElementById("qt-back");
+
+  if (nextButton) {
+    nextButton.addEventListener("click", goToNextStep);
+  }
+
+  if (backButton) {
+    backButton.addEventListener("click", goToPreviousStep);
+  }
+}
+
 function attachStepEvents(step) {
   if (step.type === "single-select") {
     attachSingleSelectEvents(step);
@@ -275,6 +386,10 @@ function attachStepEvents(step) {
 
   if (step.type === "multi-select") {
     attachMultiSelectEvents(step);
+  }
+
+  if (step.type === "estimate") {
+    attachEstimateEvents();
   }
 }
 
