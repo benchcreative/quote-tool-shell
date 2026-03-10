@@ -267,19 +267,17 @@ function renderMoveDetails(step, stepNumber, totalSteps) {
   for (const option of step.extrasOptions) {
     const selectedClass = selectedExtras.includes(option.value) ? "is-selected" : "";
     extrasHtml += `
-      <button class="qt-option ${selectedClass}" data-extra-value="${option.value}">
+      <button class="qt-chip ${selectedClass}" data-extra-value="${option.value}" type="button">
         ${option.label}
       </button>
     `;
   }
 
-  let accessHtml = "";
+  let accessOptionsHtml = `<option value="">Select access</option>`;
   for (const option of step.accessOptions) {
-    const selectedClass = accessValue === option.value ? "is-selected" : "";
-    accessHtml += `
-      <button class="qt-option ${selectedClass}" data-access-value="${option.value}">
-        ${option.label}
-      </button>
+    const selectedAttr = accessValue === option.value ? "selected" : "";
+    accessOptionsHtml += `
+      <option value="${option.value}" ${selectedAttr}>${option.label}</option>
     `;
   }
 
@@ -291,29 +289,29 @@ function renderMoveDetails(step, stepNumber, totalSteps) {
 
       <div class="qt-section-block">
         <h3 class="qt-section-title">Additional services</h3>
-        <div class="qt-options qt-options-single-column">
+        <div class="qt-chip-group">
           ${extrasHtml}
         </div>
       </div>
 
       <div class="qt-section-block">
         <h3 class="qt-section-title">Access</h3>
-        <div class="qt-options qt-options-single-column">
-          ${accessHtml}
-        </div>
+        <select class="qt-select" id="qt-access-select">
+          ${accessOptionsHtml}
+        </select>
       </div>
 
       <div class="qt-section-block">
         <h3 class="qt-section-title">Move date</h3>
-        <div class="qt-options qt-options-single-column">
-          <button class="qt-option ${selectedType === "exact" ? "is-selected" : ""}" data-date-type="exact">
-            I know the exact date
+        <div class="qt-date-choice-row">
+          <button class="qt-segment ${selectedType === "exact" ? "is-selected" : ""}" data-date-type="exact" type="button">
+            Exact date
           </button>
-          <button class="qt-option ${selectedType === "approx" ? "is-selected" : ""}" data-date-type="approx">
-            I know the approximate month
+          <button class="qt-segment ${selectedType === "approx" ? "is-selected" : ""}" data-date-type="approx" type="button">
+            Approx month
           </button>
-          <button class="qt-option ${selectedType === "not_sure" ? "is-selected" : ""}" data-date-type="not_sure">
-            I’m not sure yet
+          <button class="qt-segment ${selectedType === "not_sure" ? "is-selected" : ""}" data-date-type="not_sure" type="button">
+            Not sure
           </button>
         </div>
 
@@ -579,7 +577,7 @@ function attachAddressesEvents() {
 
 function attachMoveDetailsEvents() {
   const extraButtons = document.querySelectorAll("[data-extra-value]");
-  const accessButtons = document.querySelectorAll("[data-access-value]");
+  const accessSelect = document.getElementById("qt-access-select");
   const dateButtons = document.querySelectorAll("[data-date-type]");
   const nextButton = document.getElementById("qt-next");
   const backButton = document.getElementById("qt-back");
@@ -619,17 +617,12 @@ function attachMoveDetailsEvents() {
     });
   });
 
-  accessButtons.forEach((button) => {
-    button.addEventListener("click", function () {
-      const value = button.getAttribute("data-access-value");
-      state.answers.access_type = value;
-
-      accessButtons.forEach((btn) => btn.classList.remove("is-selected"));
-      button.classList.add("is-selected");
-
+  if (accessSelect) {
+    accessSelect.addEventListener("change", function () {
+      state.answers.access_type = accessSelect.value;
       if (nextButton) nextButton.disabled = !isMoveDetailsValid();
     });
-  });
+  }
 
   dateButtons.forEach((button) => {
     button.addEventListener("click", function () {
