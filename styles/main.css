@@ -1,8 +1,17 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #f7f7f7;
+}
+
 body {
   font-family: Arial, sans-serif;
-  background: #f7f7f7;
-  margin: 0;
   padding: 40px 20px;
+}
+
+#quote-tool {
+  width: 100%;
 }
 
 .qt-shell {
@@ -11,7 +20,7 @@ body {
   background: white;
   border-radius: 20px;
   padding: 32px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
 .qt-progress-wrap {
@@ -76,6 +85,7 @@ body {
   padding: 20px;
   font-size: 18px;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .qt-option.is-selected {
