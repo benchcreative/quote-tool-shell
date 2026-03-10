@@ -23,6 +23,25 @@
       "title": "Where are you moving from?",
       "subtitle": "Enter your current postcode or address.",
       "placeholder": "Start typing postcode or address"
+    },
+    {
+      "id": "moving_to",
+      "type": "text-input",
+      "title": "Where are you moving to?",
+      "subtitle": "Enter your destination postcode or address.",
+      "placeholder": "Start typing postcode or address"
+    },
+    {
+      "id": "extras",
+      "type": "multi-select",
+      "title": "Do you need any additional services?",
+      "subtitle": "Select any that apply.",
+      "options": [
+        { "label": "Full packing service", "value": "full_packing" },
+        { "label": "Fragile item packing", "value": "fragile_packing" },
+        { "label": "Furniture dismantling", "value": "dismantling" },
+        { "label": "No additional services", "value": "none" }
+      ]
     }
   ]
 }
