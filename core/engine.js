@@ -55,6 +55,11 @@ function formatPropertySize(value) {
   return map[value] || value || "Not provided";
 }
 
+function formatDistanceBand(value) {
+  const bands = currentConfig?.pricing?.distanceBands || {};
+  return bands[value]?.label || "Not provided";
+}
+
 function formatExtras(values) {
   if (!Array.isArray(values) || values.length === 0) {
     return "None selected";
@@ -82,16 +87,27 @@ function formatMoveDateSummary() {
   return "Not provided";
 }
 
+function getAddressLabel(answerKey) {
+  const value = state.answers[answerKey];
+
+  if (!value) return "Not provided";
+  if (typeof value === "string") return value;
+  return value.label || "Not provided";
+}
+
 function calculateEstimate() {
   const pricing = currentConfig.pricing || {};
   const basePrices = pricing.basePrices || {};
+  const distanceBands = pricing.distanceBands || {};
   const extrasPricing = pricing.extras || {};
-  const rangePercent = pricing.rangePercent || 15;
+  const rangePercent = pricing.rangePercent || 12;
 
   const propertySize = state.answers.property_size;
+  const distanceBand = state.answers.distance_band;
   const selectedExtras = state.answers.extras || [];
 
   let total = basePrices[propertySize] || 0;
+  total += distanceBands[distanceBand]?.price || 0;
 
   if (Array.isArray(selectedExtras)) {
     selectedExtras.forEach((extra) => {
@@ -102,7 +118,11 @@ function calculateEstimate() {
   const min = Math.round(total * (1 - rangePercent / 100));
   const max = Math.round(total * (1 + rangePercent / 100));
 
-  return { base: total, min, max };
+  return {
+    base: total,
+    min,
+    max
+  };
 }
 
 function renderSingleSelect(step, stepNumber, totalSteps) {
@@ -260,11 +280,15 @@ function renderEstimate(step, stepNumber, totalSteps) {
         </div>
         <div class="qt-summary-row">
           <span>Moving from</span>
-          <strong>${typeof state.answers.moving_from === "string" ? state.answers.moving_from : state.answers.moving_from?.label || "Not provided"}</strong>
+          <strong>${getAddressLabel("moving_from")}</strong>
         </div>
         <div class="qt-summary-row">
           <span>Moving to</span>
-          <strong>${typeof state.answers.moving_to === "string" ? state.answers.moving_to : state.answers.moving_to?.label || "Not provided"}</strong>
+          <strong>${getAddressLabel("moving_to")}</strong>
+        </div>
+        <div class="qt-summary-row">
+          <span>Distance band</span>
+          <strong>${formatDistanceBand(state.answers.distance_band)}</strong>
         </div>
         <div class="qt-summary-row">
           <span>Extras</span>
