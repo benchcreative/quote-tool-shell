@@ -11,20 +11,33 @@ async function loadConfig(configPath) {
 }
 
 async function initQuoteTool() {
-  const config = await loadConfig("/configs/removals.json");
-
-  console.log("Config loaded:", config);
-
-  // Temporary test
   const app = document.getElementById("quote-tool");
 
-  if (app) {
-    app.innerHTML = `
-      <h2>${config.name}</h2>
-      <p>Config successfully loaded.</p>
-    `;
+  try {
+    const config = await loadConfig("configs/removals.json");
+
+    if (!config) {
+      throw new Error("Config not found");
+    }
+
+    console.log("Config loaded:", config);
+
+    if (app) {
+      app.innerHTML = `
+        <h2>${config.name}</h2>
+        <p>Config successfully loaded.</p>
+      `;
+    }
+  } catch (error) {
+    console.error(error);
+
+    if (app) {
+      app.innerHTML = `
+        <h2>Error</h2>
+        <p>Could not load config file.</p>
+      `;
+    }
   }
 }
 
 document.addEventListener("DOMContentLoaded", initQuoteTool);
-
