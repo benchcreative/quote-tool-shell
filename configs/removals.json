@@ -4,20 +4,46 @@
   "kicker": "Estimates in under 60 seconds",
   "pricing": {
     "basePrices": {
-      "studio": 180,
-      "1_bed": 260,
-      "2_bed": 380,
-      "3_bed": 520,
-      "4_bed": 700,
-      "5_plus": 900
+      "studio": 250,
+      "1_bed": 425,
+      "2_bed": 700,
+      "3_bed": 1050,
+      "4_bed": 1450,
+      "5_plus": 2000
+    },
+    "distanceBands": {
+      "band_0_10": {
+        "label": "0–10 miles",
+        "price": 0
+      },
+      "band_10_25": {
+        "label": "10–25 miles",
+        "price": 75
+      },
+      "band_25_50": {
+        "label": "25–50 miles",
+        "price": 125
+      },
+      "band_50_100": {
+        "label": "50–100 miles",
+        "price": 225
+      },
+      "band_100_150": {
+        "label": "100–150 miles",
+        "price": 300
+      },
+      "band_150_plus": {
+        "label": "150+ miles",
+        "price": 450
+      }
     },
     "extras": {
-      "full_packing": 120,
-      "fragile_packing": 60,
-      "dismantling": 80,
+      "full_packing": 325,
+      "fragile_packing": 125,
+      "dismantling": 125,
       "none": 0
     },
-    "rangePercent": 15
+    "rangePercent": 12
   },
   "steps": [
     {
@@ -49,6 +75,20 @@
       "placeholder": "Start typing postcode or address"
     },
     {
+      "id": "distance_band",
+      "type": "single-select",
+      "title": "How far are you moving?",
+      "subtitle": "Choose the estimated journey distance.",
+      "options": [
+        { "label": "0–10 miles", "value": "band_0_10" },
+        { "label": "10–25 miles", "value": "band_10_25" },
+        { "label": "25–50 miles", "value": "band_25_50" },
+        { "label": "50–100 miles", "value": "band_50_100" },
+        { "label": "100–150 miles", "value": "band_100_150" },
+        { "label": "150+ miles", "value": "band_150_plus" }
+      ]
+    },
+    {
       "id": "extras",
       "type": "multi-select",
       "title": "Do you need any additional services?",
@@ -70,7 +110,7 @@
       "id": "estimate",
       "type": "estimate",
       "title": "Your estimated moving cost",
-      "subtitle": "Based on property size and selected services."
+      "subtitle": "Based on property size, distance and selected services."
     },
     {
       "id": "contact",
