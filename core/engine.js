@@ -63,6 +63,26 @@ function formatExtras(values) {
   return values.map(value => map[value] || value).join(", ");
 }
 
+function formatMoveDateSummary() {
+  const type = state.answers.move_date_type;
+  const exactDate = state.answers.exact_move_date;
+  const approxMonth = state.answers.approx_move_month;
+
+  if (type === "exact") {
+    return exactDate || "Exact date not provided";
+  }
+
+  if (type === "approx") {
+    return approxMonth || "Approximate date not provided";
+  }
+
+  if (type === "not_sure") {
+    return "Not sure yet";
+  }
+
+  return "Not provided";
+}
+
 function calculateEstimate() {
   const pricing = currentConfig.pricing || {};
   const basePrices = pricing.basePrices || {};
@@ -165,13 +185,72 @@ function renderMultiSelect(step, stepNumber, totalSteps) {
       <h1 class="qt-title">${step.title}</h1>
       <p class="qt-subtitle">${step.subtitle}</p>
 
-      <div class="qt-options qt-options-single-column">
+      <div class="qt-options">
         ${optionsHtml}
       </div>
 
       <div class="qt-actions">
         <button class="qt-nav qt-nav-back" id="qt-back">Back</button>
         <button class="qt-nav qt-nav-next" id="qt-next">Continue</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderDateChoice(step, stepNumber, totalSteps) {
+  const selectedType = state.answers.move_date_type || "";
+  const exactDate = state.answers.exact_move_date || "";
+  const approxMonth = state.answers.approx_move_month || "";
+
+  return `
+    <div class="qt-shell">
+      ${renderProgress(stepNumber, totalSteps)}
+      <h1 class="qt-title">${step.title}</h1>
+      <p class="qt-subtitle">${step.subtitle}</p>
+
+      <div class="qt-options qt-options-single-column">
+        <button class="qt-option ${selectedType === "exact" ? "is-selected" : ""}" data-date-type="exact">
+          I know the exact date
+        </button>
+        <button class="qt-option ${selectedType === "approx" ? "is-selected" : ""}" data-date-type="approx">
+          I know the approximate month
+        </button>
+        <button class="qt-option ${selectedType === "not_sure" ? "is-selected" : ""}" data-date-type="not_sure">
+          I’m not sure yet
+        </button>
+      </div>
+
+      <div id="qt-date-fields" class="qt-date-fields">
+        ${
+          selectedType === "exact"
+            ? `
+              <input
+                class="qt-input"
+                id="qt-exact-date"
+                type="date"
+                value="${exactDate}"
+              />
+            `
+            : ""
+        }
+
+        ${
+          selectedType === "approx"
+            ? `
+              <input
+                class="qt-input"
+                id="qt-approx-month"
+                type="month"
+                value="${approxMonth}"
+              />
+            `
+            : ""
+        }
+      </div>
+
+      <div class="qt-actions">
+        <button class="qt-nav qt-nav-back" id="qt-back">Back</button>
+        <button class="qt-nav qt-nav-next" id="qt-next" ${isDateChoiceValid() ? "" : "disabled"}>Continue</button>
       </div>
     </div>
   `;
@@ -207,12 +286,51 @@ function renderEstimate(step, stepNumber, totalSteps) {
           <span>Extras</span>
           <strong>${formatExtras(state.answers.extras)}</strong>
         </div>
+        <div class="qt-summary-row">
+          <span>Move date</span>
+          <strong>${formatMoveDateSummary()}</strong>
+        </div>
       </div>
 
       <div class="qt-actions">
         <button class="qt-nav qt-nav-back" id="qt-back">Back</button>
         <button class="qt-nav qt-nav-next" id="qt-next">Continue</button>
       </div>
+    </div>
+  `;
+}
+
+function renderContact(step, stepNumber, totalSteps) {
+  const fullName = state.answers.contact_name || "";
+  const phone = state.answers.contact_phone || "";
+  const email = state.answers.contact_email || "";
+
+  return `
+    <div class="qt-shell">
+      ${renderProgress(stepNumber, totalSteps)}
+      <h1 class="qt-title">${step.title}</h1>
+      <p class="qt-subtitle">${step.subtitle}</p>
+
+      <div class="qt-form-grid">
+        <input class="qt-input" id="qt-contact-name" type="text" placeholder="Full name" value="${fullName}" />
+        <input class="qt-input" id="qt-contact-phone" type="tel" placeholder="Phone number" value="${phone}" />
+        <input class="qt-input" id="qt-contact-email" type="email" placeholder="Email address" value="${email}" />
+      </div>
+
+      <div class="qt-actions">
+        <button class="qt-nav qt-nav-back" id="qt-back">Back</button>
+        <button class="qt-nav qt-nav-next" id="qt-next" ${isContactValid() ? "" : "disabled"}>Submit</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderThankYou(step) {
+  return `
+    <div class="qt-shell qt-thankyou">
+      <div class="qt-thankyou-icon">✓</div>
+      <h1 class="qt-title">${step.title}</h1>
+      <p class="qt-subtitle">${step.subtitle}</p>
     </div>
   `;
 }
@@ -230,8 +348,20 @@ function renderStep(step, stepNumber, totalSteps) {
     return renderMultiSelect(step, stepNumber, totalSteps);
   }
 
+  if (step.type === "date-choice") {
+    return renderDateChoice(step, stepNumber, totalSteps);
+  }
+
   if (step.type === "estimate") {
     return renderEstimate(step, stepNumber, totalSteps);
+  }
+
+  if (step.type === "contact") {
+    return renderContact(step, stepNumber, totalSteps);
+  }
+
+  if (step.type === "thank-you") {
+    return renderThankYou(step);
   }
 
   return `
@@ -255,6 +385,32 @@ function goToPreviousStep() {
     state.currentStep -= 1;
     renderCurrentStep();
   }
+}
+
+function isDateChoiceValid() {
+  const type = state.answers.move_date_type;
+
+  if (type === "exact") {
+    return !!state.answers.exact_move_date;
+  }
+
+  if (type === "approx") {
+    return !!state.answers.approx_move_month;
+  }
+
+  if (type === "not_sure") {
+    return true;
+  }
+
+  return false;
+}
+
+function isContactValid() {
+  const name = (state.answers.contact_name || "").trim();
+  const phone = (state.answers.contact_phone || "").trim();
+  const email = (state.answers.contact_email || "").trim();
+
+  return !!(name && phone && email);
 }
 
 function attachSingleSelectEvents(step) {
@@ -362,9 +518,90 @@ function attachMultiSelectEvents(step) {
   }
 }
 
+function attachDateChoiceEvents() {
+  const buttons = document.querySelectorAll("[data-date-type]");
+  const nextButton = document.getElementById("qt-next");
+  const backButton = document.getElementById("qt-back");
+
+  buttons.forEach(function (button) {
+    button.addEventListener("click", function () {
+      const value = button.getAttribute("data-date-type");
+      state.answers.move_date_type = value;
+
+      if (value !== "exact") {
+        state.answers.exact_move_date = "";
+      }
+
+      if (value !== "approx") {
+        state.answers.approx_move_month = "";
+      }
+
+      renderCurrentStep();
+    });
+  });
+
+  const exactDateInput = document.getElementById("qt-exact-date");
+  if (exactDateInput) {
+    exactDateInput.addEventListener("input", function () {
+      state.answers.exact_move_date = exactDateInput.value;
+      if (nextButton) {
+        nextButton.disabled = !isDateChoiceValid();
+      }
+    });
+  }
+
+  const approxMonthInput = document.getElementById("qt-approx-month");
+  if (approxMonthInput) {
+    approxMonthInput.addEventListener("input", function () {
+      state.answers.approx_move_month = approxMonthInput.value;
+      if (nextButton) {
+        nextButton.disabled = !isDateChoiceValid();
+      }
+    });
+  }
+
+  if (nextButton) {
+    nextButton.addEventListener("click", goToNextStep);
+  }
+
+  if (backButton) {
+    backButton.addEventListener("click", goToPreviousStep);
+  }
+}
+
 function attachEstimateEvents() {
   const nextButton = document.getElementById("qt-next");
   const backButton = document.getElementById("qt-back");
+
+  if (nextButton) {
+    nextButton.addEventListener("click", goToNextStep);
+  }
+
+  if (backButton) {
+    backButton.addEventListener("click", goToPreviousStep);
+  }
+}
+
+function attachContactEvents() {
+  const nameInput = document.getElementById("qt-contact-name");
+  const phoneInput = document.getElementById("qt-contact-phone");
+  const emailInput = document.getElementById("qt-contact-email");
+  const nextButton = document.getElementById("qt-next");
+  const backButton = document.getElementById("qt-back");
+
+  function updateContactState() {
+    state.answers.contact_name = nameInput ? nameInput.value : "";
+    state.answers.contact_phone = phoneInput ? phoneInput.value : "";
+    state.answers.contact_email = emailInput ? emailInput.value : "";
+
+    if (nextButton) {
+      nextButton.disabled = !isContactValid();
+    }
+  }
+
+  if (nameInput) nameInput.addEventListener("input", updateContactState);
+  if (phoneInput) phoneInput.addEventListener("input", updateContactState);
+  if (emailInput) emailInput.addEventListener("input", updateContactState);
 
   if (nextButton) {
     nextButton.addEventListener("click", goToNextStep);
@@ -388,8 +625,16 @@ function attachStepEvents(step) {
     attachMultiSelectEvents(step);
   }
 
+  if (step.type === "date-choice") {
+    attachDateChoiceEvents();
+  }
+
   if (step.type === "estimate") {
     attachEstimateEvents();
+  }
+
+  if (step.type === "contact") {
+    attachContactEvents();
   }
 }
 
