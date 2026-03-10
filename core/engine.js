@@ -5,6 +5,9 @@ const state = {
 
 let currentConfig = null;
 
+console.log("Google loaded?", !!window.google);
+console.log("Places loaded?", !!(window.google && google.maps && google.maps.places));
+
 async function loadConfig(configPath) {
   const response = await fetch(configPath);
   if (!response.ok) {
