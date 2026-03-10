@@ -177,4 +177,27 @@ function renderCurrentStep() {
   attachStepEvents(step);
 }
 
-async function initQuote
+async function initQuoteTool() {
+  const app = document.getElementById("quote-tool");
+
+  try {
+    currentConfig = await loadConfig("configs/removals.json");
+
+    if (!currentConfig) {
+      throw new Error("Config not found");
+    }
+
+    renderCurrentStep();
+  } catch (error) {
+    console.error(error);
+
+    if (app) {
+      app.innerHTML = `
+        <h2>Error</h2>
+        <p>Could not load config file.</p>
+      `;
+    }
+  }
+}
+
+document.addEventListener("DOMContentLoaded", initQuoteTool);
