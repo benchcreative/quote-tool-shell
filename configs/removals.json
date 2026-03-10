@@ -61,10 +61,28 @@
       ]
     },
     {
+      "id": "move_date_type",
+      "type": "date-choice",
+      "title": "When are you planning to move?",
+      "subtitle": "Choose the option that best fits your situation."
+    },
+    {
       "id": "estimate",
       "type": "estimate",
       "title": "Your estimated moving cost",
       "subtitle": "Based on property size and selected services."
+    },
+    {
+      "id": "contact",
+      "type": "contact",
+      "title": "Confirm your move",
+      "subtitle": "Leave your details and we’ll confirm your quote."
+    },
+    {
+      "id": "thank_you",
+      "type": "thank-you",
+      "title": "Thank you",
+      "subtitle": "We’ve received your enquiry and will be in touch shortly."
     }
   ]
 }
