@@ -122,3 +122,91 @@ body {
   font-size: 16px;
   margin-top: 8px;
 }
+
+.qt-estimate-range {
+  font-size: 56px;
+  line-height: 1;
+  font-weight: 700;
+  color: #5ba79c;
+  margin: 8px 0 20px;
+}
+
+.qt-estimate-note {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 24px;
+}
+
+.qt-summary {
+  background: #f4f4f4;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.qt-summary-title {
+  margin: 0 0 16px;
+  font-size: 22px;
+}
+
+.qt-summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 10px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.qt-summary-row:last-child {
+  border-bottom: 0;
+}
+
+.qt-summary-row span {
+  color: #666;
+}
+
+.qt-summary-row strong {
+  text-align: right;
+}
+
+@media (max-width: 700px) {
+  body {
+    padding: 20px 12px;
+  }
+
+  .qt-shell {
+    padding: 22px;
+  }
+
+  .qt-title {
+    font-size: 28px;
+  }
+
+  .qt-subtitle {
+    font-size: 16px;
+  }
+
+  .qt-options {
+    grid-template-columns: 1fr;
+  }
+
+  .qt-actions {
+    flex-direction: column;
+  }
+
+  .qt-nav {
+    width: 100%;
+  }
+
+  .qt-estimate-range {
+    font-size: 40px;
+  }
+
+  .qt-summary-row {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .qt-summary-row strong {
+    text-align: left;
+  }
+}
