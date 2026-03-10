@@ -5,7 +5,6 @@ const state = {
 
 let currentConfig = null;
 let googleMapsReady = false;
-let activeAutocomplete = null;
 
 window.initGoogleMapsAPI = function () {
   googleMapsReady = true;
@@ -95,6 +94,11 @@ function getAddressLabel(answerKey) {
   return value.label || "Not provided";
 }
 
+function getDistanceMilesText() {
+  if (typeof state.answers.distance_miles !== "number") return "";
+  return `${Math.round(state.answers.distance_miles)} miles`;
+}
+
 function calculateEstimate() {
   const pricing = currentConfig.pricing || {};
   const basePrices = pricing.basePrices || {};
@@ -125,8 +129,75 @@ function calculateEstimate() {
   };
 }
 
+function getDistanceBandFromMiles(miles) {
+  if (miles == null) return null;
+  if (miles <= 10) return "band_0_10";
+  if (miles <= 25) return "band_10_25";
+  if (miles <= 50) return "band_25_50";
+  if (miles <= 100) return "band_50_100";
+  if (miles <= 150) return "band_100_150";
+  return "band_150_plus";
+}
+
+async function calculateRouteDistanceMiles() {
+  const from = state.answers.moving_from;
+  const to = state.answers.moving_to;
+
+  if (!from || !to || !from.label || !to.label) {
+    return null;
+  }
+
+  if (!window.google || !google.maps) {
+    return null;
+  }
+
+  const { Route } = await google.maps.importLibrary("routes");
+
+  const request = {
+    origin: from.label,
+    destination: to.label,
+    travelMode: "DRIVING",
+    fields: ["distanceMeters"]
+  };
+
+  const { routes } = await Route.computeRoutes(request);
+  const distanceMeters = routes?.[0]?.distanceMeters;
+
+  if (!distanceMeters) {
+    return null;
+  }
+
+  return distanceMeters / 1609.344;
+}
+
+async function tryAutoAssignDistanceBand() {
+  if (!state.answers.moving_from?.label || !state.answers.moving_to?.label) {
+    return;
+  }
+
+  try {
+    const miles = await calculateRouteDistanceMiles();
+
+    if (miles != null) {
+      state.answers.distance_miles = miles;
+      state.answers.distance_band = getDistanceBandFromMiles(miles);
+    }
+  } catch (error) {
+    console.error("Route calculation failed:", error);
+  }
+}
+
 function renderSingleSelect(step, stepNumber, totalSteps) {
   const selectedValue = state.answers[step.id] || "";
+
+  let helperHtml = "";
+  if (step.id === "distance_band" && state.answers.distance_miles) {
+    helperHtml = `
+      <p class="qt-helper">
+        Based on your selected addresses, we estimate this move is about ${Math.round(state.answers.distance_miles)} miles.
+      </p>
+    `;
+  }
 
   let optionsHtml = "";
   for (const option of step.options) {
@@ -143,6 +214,7 @@ function renderSingleSelect(step, stepNumber, totalSteps) {
       ${renderProgress(stepNumber, totalSteps)}
       <h1 class="qt-title">${step.title}</h1>
       <p class="qt-subtitle">${step.subtitle}</p>
+      ${helperHtml}
 
       <div class="qt-options">
         ${optionsHtml}
@@ -262,6 +334,7 @@ function renderDateChoice(step, stepNumber, totalSteps) {
 
 function renderEstimate(step, stepNumber, totalSteps) {
   const estimate = calculateEstimate();
+  const milesText = getDistanceMilesText();
 
   return `
     <div class="qt-shell">
@@ -288,7 +361,7 @@ function renderEstimate(step, stepNumber, totalSteps) {
         </div>
         <div class="qt-summary-row">
           <span>Distance band</span>
-          <strong>${formatDistanceBand(state.answers.distance_band)}</strong>
+          <strong>${formatDistanceBand(state.answers.distance_band)}${milesText ? ` (${milesText})` : ""}</strong>
         </div>
         <div class="qt-summary-row">
           <span>Extras</span>
@@ -396,13 +469,13 @@ function initAddressAutocomplete(inputId, answerKey, nextButton) {
     return;
   }
 
-  activeAutocomplete = new google.maps.places.Autocomplete(input, {
+  const autocomplete = new google.maps.places.Autocomplete(input, {
     fields: ["formatted_address", "geometry", "place_id", "address_components"],
     componentRestrictions: { country: ["gb"] }
   });
 
-  activeAutocomplete.addListener("place_changed", () => {
-    const place = activeAutocomplete.getPlace();
+  autocomplete.addListener("place_changed", async () => {
+    const place = autocomplete.getPlace();
 
     state.answers[answerKey] = {
       label: place.formatted_address || input.value,
@@ -413,6 +486,10 @@ function initAddressAutocomplete(inputId, answerKey, nextButton) {
 
     if (nextButton) {
       nextButton.disabled = !(place.formatted_address || input.value.trim());
+    }
+
+    if (state.answers.moving_from?.label && state.answers.moving_to?.label) {
+      await tryAutoAssignDistanceBand();
     }
   });
 }
