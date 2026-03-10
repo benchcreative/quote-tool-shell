@@ -56,3 +56,42 @@ body {
   margin-top: 24px;
   font-weight: bold;
 }
+.qt-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.qt-nav {
+  min-width: 140px;
+  border: 0;
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.qt-nav-back {
+  background: #e9e9e9;
+}
+
+.qt-nav-next {
+  background: #5ba79c;
+  color: white;
+}
+
+.qt-nav:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.qt-input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 2px solid #ddd;
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 16px;
+  margin-top: 8px;
+}
