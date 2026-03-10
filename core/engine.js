@@ -74,6 +74,16 @@ function formatExtras(values) {
   return values.map((value) => map[value] || value).join(", ");
 }
 
+function formatAccess(value) {
+  const map = {
+    easy_access: "Easy access / driveway",
+    one_flight: "One flight of stairs",
+    multiple_flights: "Multiple flights / no lift",
+    restricted_parking: "Restricted parking / difficult access"
+  };
+  return map[value] || "Not provided";
+}
+
 function formatMoveDateSummary() {
   const type = state.answers.move_date_type;
   const exactDate = state.answers.exact_move_date;
@@ -88,7 +98,6 @@ function formatMoveDateSummary() {
 
 function getAddressLabel(answerKey) {
   const value = state.answers[answerKey];
-
   if (!value) return "Not provided";
   if (typeof value === "string") return value;
   return value.label || "Not provided";
@@ -97,36 +106,6 @@ function getAddressLabel(answerKey) {
 function getDistanceMilesText() {
   if (typeof state.answers.distance_miles !== "number") return "";
   return `${Math.round(state.answers.distance_miles)} miles`;
-}
-
-function calculateEstimate() {
-  const pricing = currentConfig.pricing || {};
-  const basePrices = pricing.basePrices || {};
-  const distanceBands = pricing.distanceBands || {};
-  const extrasPricing = pricing.extras || {};
-  const rangePercent = pricing.rangePercent || 12;
-
-  const propertySize = state.answers.property_size;
-  const distanceBand = state.answers.distance_band;
-  const selectedExtras = state.answers.extras || [];
-
-  let total = basePrices[propertySize] || 0;
-  total += distanceBands[distanceBand]?.price || 0;
-
-  if (Array.isArray(selectedExtras)) {
-    selectedExtras.forEach((extra) => {
-      total += extrasPricing[extra] || 0;
-    });
-  }
-
-  const min = Math.round(total * (1 - rangePercent / 100));
-  const max = Math.round(total * (1 + rangePercent / 100));
-
-  return {
-    base: total,
-    min,
-    max
-  };
 }
 
 function getDistanceBandFromMiles(miles) {
@@ -143,13 +122,8 @@ async function calculateRouteDistanceMiles() {
   const from = state.answers.moving_from;
   const to = state.answers.moving_to;
 
-  if (!from || !to || !from.label || !to.label) {
-    return null;
-  }
-
-  if (!window.google || !google.maps) {
-    return null;
-  }
+  if (!from || !to || !from.label || !to.label) return null;
+  if (!window.google || !google.maps) return null;
 
   const { Route } = await google.maps.importLibrary("routes");
 
@@ -163,21 +137,15 @@ async function calculateRouteDistanceMiles() {
   const { routes } = await Route.computeRoutes(request);
   const distanceMeters = routes?.[0]?.distanceMeters;
 
-  if (!distanceMeters) {
-    return null;
-  }
-
+  if (!distanceMeters) return null;
   return distanceMeters / 1609.344;
 }
 
 async function tryAutoAssignDistanceBand() {
-  if (!state.answers.moving_from?.label || !state.answers.moving_to?.label) {
-    return;
-  }
+  if (!state.answers.moving_from?.label || !state.answers.moving_to?.label) return;
 
   try {
     const miles = await calculateRouteDistanceMiles();
-
     if (miles != null) {
       state.answers.distance_miles = miles;
       state.answers.distance_band = getDistanceBandFromMiles(miles);
@@ -187,17 +155,37 @@ async function tryAutoAssignDistanceBand() {
   }
 }
 
+function calculateEstimate() {
+  const pricing = currentConfig.pricing || {};
+  const basePrices = pricing.basePrices || {};
+  const distanceBands = pricing.distanceBands || {};
+  const extrasPricing = pricing.extras || {};
+  const accessPricing = pricing.access || {};
+  const rangePercent = pricing.rangePercent || 12;
+
+  const propertySize = state.answers.property_size;
+  const distanceBand = state.answers.distance_band;
+  const selectedExtras = state.answers.extras || [];
+  const accessValue = state.answers.access_type;
+
+  let total = basePrices[propertySize] || 0;
+  total += distanceBands[distanceBand]?.price || 0;
+  total += accessPricing[accessValue] || 0;
+
+  if (Array.isArray(selectedExtras)) {
+    selectedExtras.forEach((extra) => {
+      total += extrasPricing[extra] || 0;
+    });
+  }
+
+  const min = Math.round(total * (1 - rangePercent / 100));
+  const max = Math.round(total * (1 + rangePercent / 100));
+
+  return { base: total, min, max };
+}
+
 function renderSingleSelect(step, stepNumber, totalSteps) {
   const selectedValue = state.answers[step.id] || "";
-
-  let helperHtml = "";
-  if (step.id === "distance_band" && state.answers.distance_miles) {
-    helperHtml = `
-      <p class="qt-helper">
-        Based on your selected addresses, we estimate this move is about ${Math.round(state.answers.distance_miles)} miles.
-      </p>
-    `;
-  }
 
   let optionsHtml = "";
   for (const option of step.options) {
@@ -214,7 +202,6 @@ function renderSingleSelect(step, stepNumber, totalSteps) {
       ${renderProgress(stepNumber, totalSteps)}
       <h1 class="qt-title">${step.title}</h1>
       <p class="qt-subtitle">${step.subtitle}</p>
-      ${helperHtml}
 
       <div class="qt-options">
         ${optionsHtml}
@@ -228,43 +215,69 @@ function renderSingleSelect(step, stepNumber, totalSteps) {
   `;
 }
 
-function renderTextInput(step, stepNumber, totalSteps) {
-  const currentValue =
-    typeof state.answers[step.id] === "string"
-      ? state.answers[step.id]
-      : state.answers[step.id]?.label || "";
+function renderAddresses(step, stepNumber, totalSteps) {
+  const fromValue = getAddressLabel("moving_from") === "Not provided" ? "" : getAddressLabel("moving_from");
+  const toValue = getAddressLabel("moving_to") === "Not provided" ? "" : getAddressLabel("moving_to");
+  const distanceHelper = state.answers.distance_band
+    ? `<p class="qt-helper">Estimated distance: ${formatDistanceBand(state.answers.distance_band)}${getDistanceMilesText() ? ` (${getDistanceMilesText()})` : ""}</p>`
+    : "";
 
   return `
     <div class="qt-shell">
       ${renderProgress(stepNumber, totalSteps)}
       <h1 class="qt-title">${step.title}</h1>
       <p class="qt-subtitle">${step.subtitle}</p>
+      ${distanceHelper}
 
-      <input
-        class="qt-input"
-        id="qt-text-input"
-        type="text"
-        placeholder="${step.placeholder || ""}"
-        value="${currentValue}"
-        autocomplete="off"
-      />
+      <div class="qt-form-grid">
+        <input
+          class="qt-input"
+          id="qt-moving-from"
+          type="text"
+          placeholder="Moving from"
+          value="${fromValue}"
+          autocomplete="off"
+        />
+        <input
+          class="qt-input"
+          id="qt-moving-to"
+          type="text"
+          placeholder="Moving to"
+          value="${toValue}"
+          autocomplete="off"
+        />
+      </div>
 
       <div class="qt-actions">
         <button class="qt-nav qt-nav-back" id="qt-back">Back</button>
-        <button class="qt-nav qt-nav-next" id="qt-next" ${currentValue.trim() ? "" : "disabled"}>Continue</button>
+        <button class="qt-nav qt-nav-next" id="qt-next" ${(fromValue.trim() && toValue.trim()) ? "" : "disabled"}>Continue</button>
       </div>
     </div>
   `;
 }
 
-function renderMultiSelect(step, stepNumber, totalSteps) {
-  const selectedValues = state.answers[step.id] || [];
+function renderMoveDetails(step, stepNumber, totalSteps) {
+  const selectedExtras = state.answers.extras || [];
+  const accessValue = state.answers.access_type || "";
+  const selectedType = state.answers.move_date_type || "";
+  const exactDate = state.answers.exact_move_date || "";
+  const approxMonth = state.answers.approx_move_month || "";
 
-  let optionsHtml = "";
-  for (const option of step.options) {
-    const selectedClass = selectedValues.includes(option.value) ? "is-selected" : "";
-    optionsHtml += `
-      <button class="qt-option ${selectedClass}" data-value="${option.value}">
+  let extrasHtml = "";
+  for (const option of step.extrasOptions) {
+    const selectedClass = selectedExtras.includes(option.value) ? "is-selected" : "";
+    extrasHtml += `
+      <button class="qt-option ${selectedClass}" data-extra-value="${option.value}">
+        ${option.label}
+      </button>
+    `;
+  }
+
+  let accessHtml = "";
+  for (const option of step.accessOptions) {
+    const selectedClass = accessValue === option.value ? "is-selected" : "";
+    accessHtml += `
+      <button class="qt-option ${selectedClass}" data-access-value="${option.value}">
         ${option.label}
       </button>
     `;
@@ -276,57 +289,51 @@ function renderMultiSelect(step, stepNumber, totalSteps) {
       <h1 class="qt-title">${step.title}</h1>
       <p class="qt-subtitle">${step.subtitle}</p>
 
-      <div class="qt-options qt-options-single-column">
-        ${optionsHtml}
+      <div class="qt-section-block">
+        <h3 class="qt-section-title">Additional services</h3>
+        <div class="qt-options qt-options-single-column">
+          ${extrasHtml}
+        </div>
+      </div>
+
+      <div class="qt-section-block">
+        <h3 class="qt-section-title">Access</h3>
+        <div class="qt-options qt-options-single-column">
+          ${accessHtml}
+        </div>
+      </div>
+
+      <div class="qt-section-block">
+        <h3 class="qt-section-title">Move date</h3>
+        <div class="qt-options qt-options-single-column">
+          <button class="qt-option ${selectedType === "exact" ? "is-selected" : ""}" data-date-type="exact">
+            I know the exact date
+          </button>
+          <button class="qt-option ${selectedType === "approx" ? "is-selected" : ""}" data-date-type="approx">
+            I know the approximate month
+          </button>
+          <button class="qt-option ${selectedType === "not_sure" ? "is-selected" : ""}" data-date-type="not_sure">
+            I’m not sure yet
+          </button>
+        </div>
+
+        <div class="qt-date-fields">
+          ${
+            selectedType === "exact"
+              ? `<input class="qt-input" id="qt-exact-date" type="date" value="${exactDate}" />`
+              : ""
+          }
+          ${
+            selectedType === "approx"
+              ? `<input class="qt-input" id="qt-approx-month" type="month" value="${approxMonth}" />`
+              : ""
+          }
+        </div>
       </div>
 
       <div class="qt-actions">
         <button class="qt-nav qt-nav-back" id="qt-back">Back</button>
-        <button class="qt-nav qt-nav-next" id="qt-next">Continue</button>
-      </div>
-    </div>
-  `;
-}
-
-function renderDateChoice(step, stepNumber, totalSteps) {
-  const selectedType = state.answers.move_date_type || "";
-  const exactDate = state.answers.exact_move_date || "";
-  const approxMonth = state.answers.approx_move_month || "";
-
-  return `
-    <div class="qt-shell">
-      ${renderProgress(stepNumber, totalSteps)}
-      <h1 class="qt-title">${step.title}</h1>
-      <p class="qt-subtitle">${step.subtitle}</p>
-
-      <div class="qt-options qt-options-single-column">
-        <button class="qt-option ${selectedType === "exact" ? "is-selected" : ""}" data-date-type="exact">
-          I know the exact date
-        </button>
-        <button class="qt-option ${selectedType === "approx" ? "is-selected" : ""}" data-date-type="approx">
-          I know the approximate month
-        </button>
-        <button class="qt-option ${selectedType === "not_sure" ? "is-selected" : ""}" data-date-type="not_sure">
-          I’m not sure yet
-        </button>
-      </div>
-
-      <div id="qt-date-fields" class="qt-date-fields">
-        ${
-          selectedType === "exact"
-            ? `<input class="qt-input" id="qt-exact-date" type="date" value="${exactDate}" />`
-            : ""
-        }
-        ${
-          selectedType === "approx"
-            ? `<input class="qt-input" id="qt-approx-month" type="month" value="${approxMonth}" />`
-            : ""
-        }
-      </div>
-
-      <div class="qt-actions">
-        <button class="qt-nav qt-nav-back" id="qt-back">Back</button>
-        <button class="qt-nav qt-nav-next" id="qt-next" ${isDateChoiceValid() ? "" : "disabled"}>Continue</button>
+        <button class="qt-nav qt-nav-next" id="qt-next" ${isMoveDetailsValid() ? "" : "disabled"}>Continue</button>
       </div>
     </div>
   `;
@@ -360,12 +367,16 @@ function renderEstimate(step, stepNumber, totalSteps) {
           <strong>${getAddressLabel("moving_to")}</strong>
         </div>
         <div class="qt-summary-row">
-          <span>Distance band</span>
+          <span>Distance</span>
           <strong>${formatDistanceBand(state.answers.distance_band)}${milesText ? ` (${milesText})` : ""}</strong>
         </div>
         <div class="qt-summary-row">
           <span>Extras</span>
           <strong>${formatExtras(state.answers.extras)}</strong>
+        </div>
+        <div class="qt-summary-row">
+          <span>Access</span>
+          <strong>${formatAccess(state.answers.access_type)}</strong>
         </div>
         <div class="qt-summary-row">
           <span>Move date</span>
@@ -418,9 +429,8 @@ function renderThankYou(step) {
 
 function renderStep(step, stepNumber, totalSteps) {
   if (step.type === "single-select") return renderSingleSelect(step, stepNumber, totalSteps);
-  if (step.type === "text-input") return renderTextInput(step, stepNumber, totalSteps);
-  if (step.type === "multi-select") return renderMultiSelect(step, stepNumber, totalSteps);
-  if (step.type === "date-choice") return renderDateChoice(step, stepNumber, totalSteps);
+  if (step.type === "addresses") return renderAddresses(step, stepNumber, totalSteps);
+  if (step.type === "move-details") return renderMoveDetails(step, stepNumber, totalSteps);
   if (step.type === "estimate") return renderEstimate(step, stepNumber, totalSteps);
   if (step.type === "contact") return renderContact(step, stepNumber, totalSteps);
   if (step.type === "thank-you") return renderThankYou(step);
@@ -448,19 +458,23 @@ function goToPreviousStep() {
   }
 }
 
-function isDateChoiceValid() {
-  const type = state.answers.move_date_type;
-  if (type === "exact") return !!state.answers.exact_move_date;
-  if (type === "approx") return !!state.answers.approx_move_month;
-  if (type === "not_sure") return true;
-  return false;
-}
-
 function isContactValid() {
   const name = (state.answers.contact_name || "").trim();
   const phone = (state.answers.contact_phone || "").trim();
   const email = (state.answers.contact_email || "").trim();
   return !!(name && phone && email);
+}
+
+function isMoveDetailsValid() {
+  const accessValid = !!state.answers.access_type;
+  const type = state.answers.move_date_type;
+
+  let dateValid = false;
+  if (type === "exact") dateValid = !!state.answers.exact_move_date;
+  if (type === "approx") dateValid = !!state.answers.approx_move_month;
+  if (type === "not_sure") dateValid = true;
+
+  return accessValid && dateValid;
 }
 
 function initAddressAutocomplete(inputId, answerKey, nextButton) {
@@ -484,35 +498,31 @@ function initAddressAutocomplete(inputId, answerKey, nextButton) {
       lng: place.geometry?.location?.lng?.() || null
     };
 
+    const fromFilled = !!state.answers.moving_from?.label;
+    const toFilled = !!state.answers.moving_to?.label;
+
     if (nextButton) {
-      nextButton.disabled = !(place.formatted_address || input.value.trim());
+      nextButton.disabled = !(fromFilled && toFilled);
     }
 
-    if (state.answers.moving_from?.label && state.answers.moving_to?.label) {
+    if (fromFilled && toFilled) {
       await tryAutoAssignDistanceBand();
+      renderCurrentStep();
     }
   });
 }
 
 function attachAutocompleteIfNeeded() {
   if (!currentConfig) return;
-
   const step = currentConfig.steps[state.currentStep];
-  if (!step || step.type !== "text-input") return;
+  if (!step || step.type !== "addresses") return;
 
-  const input = document.getElementById("qt-text-input");
+  const fromInput = document.getElementById("qt-moving-from");
+  const toInput = document.getElementById("qt-moving-to");
   const nextButton = document.getElementById("qt-next");
-  if (!input) return;
 
-  if (step.id === "moving_from") {
-    input.id = "qt-moving-from";
-    initAddressAutocomplete("qt-moving-from", "moving_from", nextButton);
-  }
-
-  if (step.id === "moving_to") {
-    input.id = "qt-moving-to";
-    initAddressAutocomplete("qt-moving-to", "moving_to", nextButton);
-  }
+  if (fromInput) initAddressAutocomplete("qt-moving-from", "moving_from", nextButton);
+  if (toInput) initAddressAutocomplete("qt-moving-to", "moving_to", nextButton);
 }
 
 function attachSingleSelectEvents(step) {
@@ -528,9 +538,7 @@ function attachSingleSelectEvents(step) {
       buttons.forEach((btn) => btn.classList.remove("is-selected"));
       button.classList.add("is-selected");
 
-      if (nextButton) {
-        nextButton.disabled = false;
-      }
+      if (nextButton) nextButton.disabled = false;
     });
   });
 
@@ -538,19 +546,30 @@ function attachSingleSelectEvents(step) {
   if (backButton) backButton.addEventListener("click", goToPreviousStep);
 }
 
-function attachTextInputEvents(step) {
-  const input = document.getElementById("qt-text-input");
+function attachAddressesEvents() {
+  const fromInput = document.getElementById("qt-moving-from");
+  const toInput = document.getElementById("qt-moving-to");
   const nextButton = document.getElementById("qt-next");
   const backButton = document.getElementById("qt-back");
 
-  if (input) {
-    input.addEventListener("input", function () {
-      state.answers[step.id] = input.value;
-      if (nextButton) {
-        nextButton.disabled = !input.value.trim();
-      }
-    });
+  function updateState() {
+    const fromValue = fromInput ? fromInput.value : "";
+    const toValue = toInput ? toInput.value : "";
+
+    if (typeof state.answers.moving_from !== "object") {
+      state.answers.moving_from = fromValue;
+    }
+    if (typeof state.answers.moving_to !== "object") {
+      state.answers.moving_to = toValue;
+    }
+
+    if (nextButton) {
+      nextButton.disabled = !(fromValue.trim() && toValue.trim());
+    }
   }
+
+  if (fromInput) fromInput.addEventListener("input", updateState);
+  if (toInput) toInput.addEventListener("input", updateState);
 
   if (nextButton) nextButton.addEventListener("click", goToNextStep);
   if (backButton) backButton.addEventListener("click", goToPreviousStep);
@@ -558,23 +577,25 @@ function attachTextInputEvents(step) {
   attachAutocompleteIfNeeded();
 }
 
-function attachMultiSelectEvents(step) {
-  const buttons = document.querySelectorAll(".qt-option");
+function attachMoveDetailsEvents() {
+  const extraButtons = document.querySelectorAll("[data-extra-value]");
+  const accessButtons = document.querySelectorAll("[data-access-value]");
+  const dateButtons = document.querySelectorAll("[data-date-type]");
   const nextButton = document.getElementById("qt-next");
   const backButton = document.getElementById("qt-back");
 
-  if (!Array.isArray(state.answers[step.id])) {
-    state.answers[step.id] = [];
+  if (!Array.isArray(state.answers.extras)) {
+    state.answers.extras = [];
   }
 
-  buttons.forEach((button) => {
+  extraButtons.forEach((button) => {
     button.addEventListener("click", function () {
-      const value = button.getAttribute("data-value");
-      let selectedValues = state.answers[step.id] || [];
+      const value = button.getAttribute("data-extra-value");
+      let selectedValues = state.answers.extras || [];
 
       if (value === "none") {
         selectedValues = ["none"];
-        buttons.forEach((btn) => btn.classList.remove("is-selected"));
+        extraButtons.forEach((btn) => btn.classList.remove("is-selected"));
         button.classList.add("is-selected");
       } else {
         selectedValues = selectedValues.filter((item) => item !== "none");
@@ -587,27 +608,30 @@ function attachMultiSelectEvents(step) {
           button.classList.add("is-selected");
         }
 
-        buttons.forEach((btn) => {
-          if (btn.getAttribute("data-value") === "none") {
+        extraButtons.forEach((btn) => {
+          if (btn.getAttribute("data-extra-value") === "none") {
             btn.classList.remove("is-selected");
           }
         });
       }
 
-      state.answers[step.id] = selectedValues;
+      state.answers.extras = selectedValues;
     });
   });
 
-  if (nextButton) nextButton.addEventListener("click", goToNextStep);
-  if (backButton) backButton.addEventListener("click", goToPreviousStep);
-}
+  accessButtons.forEach((button) => {
+    button.addEventListener("click", function () {
+      const value = button.getAttribute("data-access-value");
+      state.answers.access_type = value;
 
-function attachDateChoiceEvents() {
-  const buttons = document.querySelectorAll("[data-date-type]");
-  const nextButton = document.getElementById("qt-next");
-  const backButton = document.getElementById("qt-back");
+      accessButtons.forEach((btn) => btn.classList.remove("is-selected"));
+      button.classList.add("is-selected");
 
-  buttons.forEach((button) => {
+      if (nextButton) nextButton.disabled = !isMoveDetailsValid();
+    });
+  });
+
+  dateButtons.forEach((button) => {
     button.addEventListener("click", function () {
       const value = button.getAttribute("data-date-type");
       state.answers.move_date_type = value;
@@ -623,7 +647,7 @@ function attachDateChoiceEvents() {
   if (exactDateInput) {
     exactDateInput.addEventListener("input", function () {
       state.answers.exact_move_date = exactDateInput.value;
-      if (nextButton) nextButton.disabled = !isDateChoiceValid();
+      if (nextButton) nextButton.disabled = !isMoveDetailsValid();
     });
   }
 
@@ -631,7 +655,7 @@ function attachDateChoiceEvents() {
   if (approxMonthInput) {
     approxMonthInput.addEventListener("input", function () {
       state.answers.approx_move_month = approxMonthInput.value;
-      if (nextButton) nextButton.disabled = !isDateChoiceValid();
+      if (nextButton) nextButton.disabled = !isMoveDetailsValid();
     });
   }
 
@@ -674,9 +698,8 @@ function attachContactEvents() {
 
 function attachStepEvents(step) {
   if (step.type === "single-select") attachSingleSelectEvents(step);
-  if (step.type === "text-input") attachTextInputEvents(step);
-  if (step.type === "multi-select") attachMultiSelectEvents(step);
-  if (step.type === "date-choice") attachDateChoiceEvents();
+  if (step.type === "addresses") attachAddressesEvents();
+  if (step.type === "move-details") attachMoveDetailsEvents();
   if (step.type === "estimate") attachEstimateEvents();
   if (step.type === "contact") attachContactEvents();
 }
