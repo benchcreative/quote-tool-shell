@@ -4,8 +4,8 @@
   "kicker": "Estimates in under 60 seconds",
   "pricing": {
     "basePrices": {
-      "studio": 150,
-      "1_bed": 225,
+      "studio": 250,
+      "1_bed": 325,
       "2_bed": 500,
       "3_bed": 750,
       "4_bed": 950,
@@ -18,23 +18,23 @@
       },
       "band_10_25": {
         "label": "10–25 miles",
-        "price": 55
+        "price": 75
       },
       "band_25_50": {
         "label": "25–50 miles",
-        "price": 105
+        "price": 125
       },
       "band_50_100": {
         "label": "50–100 miles",
-        "price": 205
+        "price": 225
       },
       "band_100_150": {
         "label": "100–150 miles",
-        "price": 270
+        "price": 300
       },
       "band_150_plus": {
         "label": "150+ miles",
-        "price": 400
+        "price": 450
       }
     },
     "extras": {
@@ -48,6 +48,10 @@
       "one_flight": 40,
       "multiple_flights": 90,
       "restricted_parking": 75
+    },
+    "volumeAdjustments": {
+      "largeItemUnit": 18,
+      "boxUnit": 4
     },
     "rangePercent": 12
   },
@@ -88,6 +92,24 @@
         { "label": "One flight of stairs", "value": "one_flight" },
         { "label": "Multiple flights / no lift", "value": "multiple_flights" },
         { "label": "Restricted parking / difficult access", "value": "restricted_parking" }
+      ],
+      "sliders": [
+        {
+          "id": "large_items",
+          "label": "Estimated large items",
+          "min": 0,
+          "max": 20,
+          "step": 1,
+          "default": 0
+        },
+        {
+          "id": "boxes",
+          "label": "Estimated boxes",
+          "min": 0,
+          "max": 60,
+          "step": 1,
+          "default": 0
+        }
       ]
     },
     {
