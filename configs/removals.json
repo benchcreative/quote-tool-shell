@@ -4,12 +4,12 @@
   "kicker": "Estimates in under 60 seconds",
   "pricing": {
     "basePrices": {
-      "studio": 250,
-      "1_bed": 425,
-      "2_bed": 700,
-      "3_bed": 1050,
-      "4_bed": 1450,
-      "5_plus": 2000
+      "studio": 150,
+      "1_bed": 225,
+      "2_bed": 500,
+      "3_bed": 750,
+      "4_bed": 950,
+      "5_plus": 1200
     },
     "distanceBands": {
       "band_0_10": {
@@ -18,23 +18,23 @@
       },
       "band_10_25": {
         "label": "10–25 miles",
-        "price": 75
+        "price": 55
       },
       "band_25_50": {
         "label": "25–50 miles",
-        "price": 125
+        "price": 105
       },
       "band_50_100": {
         "label": "50–100 miles",
-        "price": 225
+        "price": 205
       },
       "band_100_150": {
         "label": "100–150 miles",
-        "price": 300
+        "price": 270
       },
       "band_150_plus": {
         "label": "150+ miles",
-        "price": 450
+        "price": 400
       }
     },
     "extras": {
@@ -42,6 +42,12 @@
       "fragile_packing": 125,
       "dismantling": 125,
       "none": 0
+    },
+    "access": {
+      "easy_access": 0,
+      "one_flight": 40,
+      "multiple_flights": 90,
+      "restricted_parking": 75
     },
     "rangePercent": 12
   },
@@ -61,50 +67,28 @@
       ]
     },
     {
-      "id": "moving_from",
-      "type": "text-input",
-      "title": "Where are you moving from?",
-      "subtitle": "Enter your current postcode or address.",
-      "placeholder": "Start typing postcode or address"
+      "id": "addresses",
+      "type": "addresses",
+      "title": "Where are you moving from and to?",
+      "subtitle": "Start typing both addresses below."
     },
     {
-      "id": "moving_to",
-      "type": "text-input",
-      "title": "Where are you moving to?",
-      "subtitle": "Enter your destination postcode or address.",
-      "placeholder": "Start typing postcode or address"
-    },
-    {
-      "id": "distance_band",
-      "type": "single-select",
-      "title": "How far are you moving?",
-      "subtitle": "We’ll estimate this automatically from your addresses where possible, but you can adjust it below.",
-      "options": [
-        { "label": "0–10 miles", "value": "band_0_10" },
-        { "label": "10–25 miles", "value": "band_10_25" },
-        { "label": "25–50 miles", "value": "band_25_50" },
-        { "label": "50–100 miles", "value": "band_50_100" },
-        { "label": "100–150 miles", "value": "band_100_150" },
-        { "label": "150+ miles", "value": "band_150_plus" }
-      ]
-    },
-    {
-      "id": "extras",
-      "type": "multi-select",
-      "title": "Do you need any additional services?",
-      "subtitle": "Select any that apply.",
-      "options": [
+      "id": "move_details",
+      "type": "move-details",
+      "title": "A few more details",
+      "subtitle": "Help us make the estimate more accurate.",
+      "extrasOptions": [
         { "label": "Full packing service", "value": "full_packing" },
         { "label": "Fragile item packing", "value": "fragile_packing" },
         { "label": "Furniture dismantling", "value": "dismantling" },
         { "label": "No additional services", "value": "none" }
+      ],
+      "accessOptions": [
+        { "label": "Easy access / driveway", "value": "easy_access" },
+        { "label": "One flight of stairs", "value": "one_flight" },
+        { "label": "Multiple flights / no lift", "value": "multiple_flights" },
+        { "label": "Restricted parking / difficult access", "value": "restricted_parking" }
       ]
-    },
-    {
-      "id": "move_date_type",
-      "type": "date-choice",
-      "title": "When are you planning to move?",
-      "subtitle": "Choose the option that best fits your situation."
     },
     {
       "id": "estimate",
