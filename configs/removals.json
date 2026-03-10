@@ -2,6 +2,23 @@
   "tool": "removals",
   "name": "MoveEstimate",
   "kicker": "Estimates in under 60 seconds",
+  "pricing": {
+    "basePrices": {
+      "studio": 180,
+      "1_bed": 260,
+      "2_bed": 380,
+      "3_bed": 520,
+      "4_bed": 700,
+      "5_plus": 900
+    },
+    "extras": {
+      "full_packing": 120,
+      "fragile_packing": 60,
+      "dismantling": 80,
+      "none": 0
+    },
+    "rangePercent": 15
+  },
   "steps": [
     {
       "id": "property_size",
@@ -42,6 +59,12 @@
         { "label": "Furniture dismantling", "value": "dismantling" },
         { "label": "No additional services", "value": "none" }
       ]
+    },
+    {
+      "id": "estimate",
+      "type": "estimate",
+      "title": "Your estimated moving cost",
+      "subtitle": "Based on property size and selected services."
     }
   ]
 }
