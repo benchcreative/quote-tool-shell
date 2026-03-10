@@ -4,9 +4,13 @@ const state = {
 };
 
 let currentConfig = null;
+let googleMapsReady = false;
+let activeAutocomplete = null;
 
-console.log("Google loaded?", !!window.google);
-console.log("Places loaded?", !!(window.google && google.maps && google.maps.places));
+window.initGoogleMapsAPI = function () {
+  googleMapsReady = true;
+  attachAutocompleteIfNeeded();
+};
 
 async function loadConfig(configPath) {
   const response = await fetch(configPath);
@@ -63,7 +67,7 @@ function formatExtras(values) {
     none: "No additional services"
   };
 
-  return values.map(value => map[value] || value).join(", ");
+  return values.map((value) => map[value] || value).join(", ");
 }
 
 function formatMoveDateSummary() {
@@ -71,17 +75,9 @@ function formatMoveDateSummary() {
   const exactDate = state.answers.exact_move_date;
   const approxMonth = state.answers.approx_move_month;
 
-  if (type === "exact") {
-    return exactDate || "Exact date not provided";
-  }
-
-  if (type === "approx") {
-    return approxMonth || "Approximate date not provided";
-  }
-
-  if (type === "not_sure") {
-    return "Not sure yet";
-  }
+  if (type === "exact") return exactDate || "Exact date not provided";
+  if (type === "approx") return approxMonth || "Approximate date not provided";
+  if (type === "not_sure") return "Not sure yet";
 
   return "Not provided";
 }
@@ -98,7 +94,7 @@ function calculateEstimate() {
   let total = basePrices[propertySize] || 0;
 
   if (Array.isArray(selectedExtras)) {
-    selectedExtras.forEach(extra => {
+    selectedExtras.forEach((extra) => {
       total += extrasPricing[extra] || 0;
     });
   }
@@ -106,11 +102,7 @@ function calculateEstimate() {
   const min = Math.round(total * (1 - rangePercent / 100));
   const max = Math.round(total * (1 + rangePercent / 100));
 
-  return {
-    base: total,
-    min,
-    max
-  };
+  return { base: total, min, max };
 }
 
 function renderSingleSelect(step, stepNumber, totalSteps) {
@@ -145,7 +137,10 @@ function renderSingleSelect(step, stepNumber, totalSteps) {
 }
 
 function renderTextInput(step, stepNumber, totalSteps) {
-  const currentValue = state.answers[step.id] || "";
+  const currentValue =
+    typeof state.answers[step.id] === "string"
+      ? state.answers[step.id]
+      : state.answers[step.id]?.label || "";
 
   return `
     <div class="qt-shell">
@@ -159,6 +154,7 @@ function renderTextInput(step, stepNumber, totalSteps) {
         type="text"
         placeholder="${step.placeholder || ""}"
         value="${currentValue}"
+        autocomplete="off"
       />
 
       <div class="qt-actions">
@@ -188,7 +184,7 @@ function renderMultiSelect(step, stepNumber, totalSteps) {
       <h1 class="qt-title">${step.title}</h1>
       <p class="qt-subtitle">${step.subtitle}</p>
 
-      <div class="qt-options">
+      <div class="qt-options qt-options-single-column">
         ${optionsHtml}
       </div>
 
@@ -226,27 +222,12 @@ function renderDateChoice(step, stepNumber, totalSteps) {
       <div id="qt-date-fields" class="qt-date-fields">
         ${
           selectedType === "exact"
-            ? `
-              <input
-                class="qt-input"
-                id="qt-exact-date"
-                type="date"
-                value="${exactDate}"
-              />
-            `
+            ? `<input class="qt-input" id="qt-exact-date" type="date" value="${exactDate}" />`
             : ""
         }
-
         ${
           selectedType === "approx"
-            ? `
-              <input
-                class="qt-input"
-                id="qt-approx-month"
-                type="month"
-                value="${approxMonth}"
-              />
-            `
+            ? `<input class="qt-input" id="qt-approx-month" type="month" value="${approxMonth}" />`
             : ""
         }
       </div>
@@ -279,11 +260,11 @@ function renderEstimate(step, stepNumber, totalSteps) {
         </div>
         <div class="qt-summary-row">
           <span>Moving from</span>
-          <strong>${state.answers.moving_from || "Not provided"}</strong>
+          <strong>${typeof state.answers.moving_from === "string" ? state.answers.moving_from : state.answers.moving_from?.label || "Not provided"}</strong>
         </div>
         <div class="qt-summary-row">
           <span>Moving to</span>
-          <strong>${state.answers.moving_to || "Not provided"}</strong>
+          <strong>${typeof state.answers.moving_to === "string" ? state.answers.moving_to : state.answers.moving_to?.label || "Not provided"}</strong>
         </div>
         <div class="qt-summary-row">
           <span>Extras</span>
@@ -339,33 +320,13 @@ function renderThankYou(step) {
 }
 
 function renderStep(step, stepNumber, totalSteps) {
-  if (step.type === "single-select") {
-    return renderSingleSelect(step, stepNumber, totalSteps);
-  }
-
-  if (step.type === "text-input") {
-    return renderTextInput(step, stepNumber, totalSteps);
-  }
-
-  if (step.type === "multi-select") {
-    return renderMultiSelect(step, stepNumber, totalSteps);
-  }
-
-  if (step.type === "date-choice") {
-    return renderDateChoice(step, stepNumber, totalSteps);
-  }
-
-  if (step.type === "estimate") {
-    return renderEstimate(step, stepNumber, totalSteps);
-  }
-
-  if (step.type === "contact") {
-    return renderContact(step, stepNumber, totalSteps);
-  }
-
-  if (step.type === "thank-you") {
-    return renderThankYou(step);
-  }
+  if (step.type === "single-select") return renderSingleSelect(step, stepNumber, totalSteps);
+  if (step.type === "text-input") return renderTextInput(step, stepNumber, totalSteps);
+  if (step.type === "multi-select") return renderMultiSelect(step, stepNumber, totalSteps);
+  if (step.type === "date-choice") return renderDateChoice(step, stepNumber, totalSteps);
+  if (step.type === "estimate") return renderEstimate(step, stepNumber, totalSteps);
+  if (step.type === "contact") return renderContact(step, stepNumber, totalSteps);
+  if (step.type === "thank-you") return renderThankYou(step);
 
   return `
     <div class="qt-shell">
@@ -392,19 +353,9 @@ function goToPreviousStep() {
 
 function isDateChoiceValid() {
   const type = state.answers.move_date_type;
-
-  if (type === "exact") {
-    return !!state.answers.exact_move_date;
-  }
-
-  if (type === "approx") {
-    return !!state.answers.approx_move_month;
-  }
-
-  if (type === "not_sure") {
-    return true;
-  }
-
+  if (type === "exact") return !!state.answers.exact_move_date;
+  if (type === "approx") return !!state.answers.approx_move_month;
+  if (type === "not_sure") return true;
   return false;
 }
 
@@ -412,8 +363,55 @@ function isContactValid() {
   const name = (state.answers.contact_name || "").trim();
   const phone = (state.answers.contact_phone || "").trim();
   const email = (state.answers.contact_email || "").trim();
-
   return !!(name && phone && email);
+}
+
+function initAddressAutocomplete(inputId, answerKey, nextButton) {
+  const input = document.getElementById(inputId);
+  if (!input || !googleMapsReady || !window.google || !google.maps || !google.maps.places) {
+    return;
+  }
+
+  activeAutocomplete = new google.maps.places.Autocomplete(input, {
+    fields: ["formatted_address", "geometry", "place_id", "address_components"],
+    componentRestrictions: { country: ["gb"] }
+  });
+
+  activeAutocomplete.addListener("place_changed", () => {
+    const place = activeAutocomplete.getPlace();
+
+    state.answers[answerKey] = {
+      label: place.formatted_address || input.value,
+      placeId: place.place_id || "",
+      lat: place.geometry?.location?.lat?.() || null,
+      lng: place.geometry?.location?.lng?.() || null
+    };
+
+    if (nextButton) {
+      nextButton.disabled = !(place.formatted_address || input.value.trim());
+    }
+  });
+}
+
+function attachAutocompleteIfNeeded() {
+  if (!currentConfig) return;
+
+  const step = currentConfig.steps[state.currentStep];
+  if (!step || step.type !== "text-input") return;
+
+  const input = document.getElementById("qt-text-input");
+  const nextButton = document.getElementById("qt-next");
+  if (!input) return;
+
+  if (step.id === "moving_from") {
+    input.id = "qt-moving-from";
+    initAddressAutocomplete("qt-moving-from", "moving_from", nextButton);
+  }
+
+  if (step.id === "moving_to") {
+    input.id = "qt-moving-to";
+    initAddressAutocomplete("qt-moving-to", "moving_to", nextButton);
+  }
 }
 
 function attachSingleSelectEvents(step) {
@@ -421,15 +419,12 @@ function attachSingleSelectEvents(step) {
   const nextButton = document.getElementById("qt-next");
   const backButton = document.getElementById("qt-back");
 
-  buttons.forEach(function (button) {
+  buttons.forEach((button) => {
     button.addEventListener("click", function () {
       const value = button.getAttribute("data-value");
       state.answers[step.id] = value;
 
-      buttons.forEach(function (btn) {
-        btn.classList.remove("is-selected");
-      });
-
+      buttons.forEach((btn) => btn.classList.remove("is-selected"));
       button.classList.add("is-selected");
 
       if (nextButton) {
@@ -438,13 +433,8 @@ function attachSingleSelectEvents(step) {
     });
   });
 
-  if (nextButton) {
-    nextButton.addEventListener("click", goToNextStep);
-  }
-
-  if (backButton) {
-    backButton.addEventListener("click", goToPreviousStep);
-  }
+  if (nextButton) nextButton.addEventListener("click", goToNextStep);
+  if (backButton) backButton.addEventListener("click", goToPreviousStep);
 }
 
 function attachTextInputEvents(step) {
@@ -461,13 +451,10 @@ function attachTextInputEvents(step) {
     });
   }
 
-  if (nextButton) {
-    nextButton.addEventListener("click", goToNextStep);
-  }
+  if (nextButton) nextButton.addEventListener("click", goToNextStep);
+  if (backButton) backButton.addEventListener("click", goToPreviousStep);
 
-  if (backButton) {
-    backButton.addEventListener("click", goToPreviousStep);
-  }
+  attachAutocompleteIfNeeded();
 }
 
 function attachMultiSelectEvents(step) {
@@ -479,29 +466,27 @@ function attachMultiSelectEvents(step) {
     state.answers[step.id] = [];
   }
 
-  buttons.forEach(function (button) {
+  buttons.forEach((button) => {
     button.addEventListener("click", function () {
       const value = button.getAttribute("data-value");
       let selectedValues = state.answers[step.id] || [];
 
       if (value === "none") {
         selectedValues = ["none"];
-        buttons.forEach(function (btn) {
-          btn.classList.remove("is-selected");
-        });
+        buttons.forEach((btn) => btn.classList.remove("is-selected"));
         button.classList.add("is-selected");
       } else {
-        selectedValues = selectedValues.filter(item => item !== "none");
+        selectedValues = selectedValues.filter((item) => item !== "none");
 
         if (selectedValues.includes(value)) {
-          selectedValues = selectedValues.filter(item => item !== value);
+          selectedValues = selectedValues.filter((item) => item !== value);
           button.classList.remove("is-selected");
         } else {
           selectedValues.push(value);
           button.classList.add("is-selected");
         }
 
-        buttons.forEach(function (btn) {
+        buttons.forEach((btn) => {
           if (btn.getAttribute("data-value") === "none") {
             btn.classList.remove("is-selected");
           }
@@ -512,13 +497,8 @@ function attachMultiSelectEvents(step) {
     });
   });
 
-  if (nextButton) {
-    nextButton.addEventListener("click", goToNextStep);
-  }
-
-  if (backButton) {
-    backButton.addEventListener("click", goToPreviousStep);
-  }
+  if (nextButton) nextButton.addEventListener("click", goToNextStep);
+  if (backButton) backButton.addEventListener("click", goToPreviousStep);
 }
 
 function attachDateChoiceEvents() {
@@ -526,18 +506,13 @@ function attachDateChoiceEvents() {
   const nextButton = document.getElementById("qt-next");
   const backButton = document.getElementById("qt-back");
 
-  buttons.forEach(function (button) {
+  buttons.forEach((button) => {
     button.addEventListener("click", function () {
       const value = button.getAttribute("data-date-type");
       state.answers.move_date_type = value;
 
-      if (value !== "exact") {
-        state.answers.exact_move_date = "";
-      }
-
-      if (value !== "approx") {
-        state.answers.approx_move_month = "";
-      }
+      if (value !== "exact") state.answers.exact_move_date = "";
+      if (value !== "approx") state.answers.approx_move_month = "";
 
       renderCurrentStep();
     });
@@ -547,9 +522,7 @@ function attachDateChoiceEvents() {
   if (exactDateInput) {
     exactDateInput.addEventListener("input", function () {
       state.answers.exact_move_date = exactDateInput.value;
-      if (nextButton) {
-        nextButton.disabled = !isDateChoiceValid();
-      }
+      if (nextButton) nextButton.disabled = !isDateChoiceValid();
     });
   }
 
@@ -557,32 +530,20 @@ function attachDateChoiceEvents() {
   if (approxMonthInput) {
     approxMonthInput.addEventListener("input", function () {
       state.answers.approx_move_month = approxMonthInput.value;
-      if (nextButton) {
-        nextButton.disabled = !isDateChoiceValid();
-      }
+      if (nextButton) nextButton.disabled = !isDateChoiceValid();
     });
   }
 
-  if (nextButton) {
-    nextButton.addEventListener("click", goToNextStep);
-  }
-
-  if (backButton) {
-    backButton.addEventListener("click", goToPreviousStep);
-  }
+  if (nextButton) nextButton.addEventListener("click", goToNextStep);
+  if (backButton) backButton.addEventListener("click", goToPreviousStep);
 }
 
 function attachEstimateEvents() {
   const nextButton = document.getElementById("qt-next");
   const backButton = document.getElementById("qt-back");
 
-  if (nextButton) {
-    nextButton.addEventListener("click", goToNextStep);
-  }
-
-  if (backButton) {
-    backButton.addEventListener("click", goToPreviousStep);
-  }
+  if (nextButton) nextButton.addEventListener("click", goToNextStep);
+  if (backButton) backButton.addEventListener("click", goToPreviousStep);
 }
 
 function attachContactEvents() {
@@ -606,39 +567,17 @@ function attachContactEvents() {
   if (phoneInput) phoneInput.addEventListener("input", updateContactState);
   if (emailInput) emailInput.addEventListener("input", updateContactState);
 
-  if (nextButton) {
-    nextButton.addEventListener("click", goToNextStep);
-  }
-
-  if (backButton) {
-    backButton.addEventListener("click", goToPreviousStep);
-  }
+  if (nextButton) nextButton.addEventListener("click", goToNextStep);
+  if (backButton) backButton.addEventListener("click", goToPreviousStep);
 }
 
 function attachStepEvents(step) {
-  if (step.type === "single-select") {
-    attachSingleSelectEvents(step);
-  }
-
-  if (step.type === "text-input") {
-    attachTextInputEvents(step);
-  }
-
-  if (step.type === "multi-select") {
-    attachMultiSelectEvents(step);
-  }
-
-  if (step.type === "date-choice") {
-    attachDateChoiceEvents();
-  }
-
-  if (step.type === "estimate") {
-    attachEstimateEvents();
-  }
-
-  if (step.type === "contact") {
-    attachContactEvents();
-  }
+  if (step.type === "single-select") attachSingleSelectEvents(step);
+  if (step.type === "text-input") attachTextInputEvents(step);
+  if (step.type === "multi-select") attachMultiSelectEvents(step);
+  if (step.type === "date-choice") attachDateChoiceEvents();
+  if (step.type === "estimate") attachEstimateEvents();
+  if (step.type === "contact") attachContactEvents();
 }
 
 function renderCurrentStep() {
@@ -651,8 +590,6 @@ function renderCurrentStep() {
 
   app.innerHTML = renderStep(step, stepNumber, totalSteps);
   attachStepEvents(step);
-
-  console.log("Current answers:", state.answers);
 }
 
 async function initQuoteTool() {
