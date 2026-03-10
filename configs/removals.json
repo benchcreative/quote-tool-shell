@@ -16,6 +16,13 @@
         { "label": "4 Bedroom", "value": "4_bed" },
         { "label": "5+ Bedroom", "value": "5_plus" }
       ]
+    },
+    {
+      "id": "moving_from",
+      "type": "text-input",
+      "title": "Where are you moving from?",
+      "subtitle": "Enter your current postcode or address.",
+      "placeholder": "Start typing postcode or address"
     }
   ]
 }
