@@ -78,7 +78,7 @@
       "id": "distance_band",
       "type": "single-select",
       "title": "How far are you moving?",
-      "subtitle": "Choose the estimated journey distance.",
+      "subtitle": "We’ll estimate this automatically from your addresses where possible, but you can adjust it below.",
       "options": [
         { "label": "0–10 miles", "value": "band_0_10" },
         { "label": "10–25 miles", "value": "band_10_25" },
