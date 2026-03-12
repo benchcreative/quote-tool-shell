@@ -119,7 +119,7 @@ function formatMoveDateSummary() {
   const approxMonth = state.answers.approx_move_month;
 
   if (type === "exact") return exactDate || "Exact date not provided";
-  if (type === "approx") return approxMonth || "Flexible";
+  if (type === "approx") return approxMonth || "Estimated month not provided";
   if (type === "not_sure") return "ASAP / not sure";
 
   return "Not provided";
@@ -405,13 +405,14 @@ function renderAddresses() {
   `;
 }
 
-function renderSliderRow(label, inputId, value, min, max) {
+function renderSliderRow(label, helper, inputId, value, min, max) {
   return `
     <div class="qt-slider-row">
       <div class="qt-slider-top">
         <span class="qt-slider-label">${label}</span>
         <span class="qt-slider-value">${value}</span>
       </div>
+      <div class="qt-slider-helper">${helper || ""}</div>
       <input
         class="qt-slider"
         id="${inputId}"
@@ -439,15 +440,12 @@ function renderMoveDetails(step) {
     const selectedClass = selectedExtras.includes(option.value) ? "is-selected" : "";
     extrasHtml += `
       <button class="qt-service-chip ${selectedClass}" data-extra-value="${option.value}" type="button">
-        ${option.label === "Full packing service" ? "Packing" :
-          option.label === "Fragile item packing" ? "Fragile" :
-          option.label === "Furniture dismantling" ? "Disassembly" :
-          "No extras"}
+        ${option.label}
       </button>
     `;
   }
 
-  let accessOptionsHtml = `<option value="">Select access</option>`;
+  let accessOptionsHtml = `<option value="">${step.accessPlaceholder || "Select access"}</option>`;
   for (const option of step.accessOptions) {
     const selectedAttr = accessValue === option.value ? "selected" : "";
     accessOptionsHtml += `<option value="${option.value}" ${selectedAttr}>${option.label}</option>`;
@@ -461,7 +459,7 @@ function renderMoveDetails(step) {
         <div class="qt-kicker">When are you moving?</div>
         <div class="qt-toggle-group">
           <button class="qt-toggle ${selectedType === "exact" ? "is-selected" : ""}" data-date-type="exact" type="button">Exact date</button>
-          <button class="qt-toggle ${selectedType === "approx" ? "is-selected" : ""}" data-date-type="approx" type="button">Flexible</button>
+          <button class="qt-toggle ${selectedType === "approx" ? "is-selected" : ""}" data-date-type="approx" type="button">Estimated month</button>
           <button class="qt-toggle ${selectedType === "not_sure" ? "is-selected" : ""}" data-date-type="not_sure" type="button">ASAP</button>
         </div>
 
@@ -480,7 +478,7 @@ function renderMoveDetails(step) {
       </div>
 
       <div class="qt-section-card">
-        <div class="qt-kicker">Floor access at pickup</div>
+        <div class="qt-kicker">${step.accessLabel || "Access / parking details"}</div>
         <select class="qt-select-input" id="qt-access-select">
           ${accessOptionsHtml}
         </select>
@@ -488,6 +486,7 @@ function renderMoveDetails(step) {
 
       <div class="qt-services-block">
         <div class="qt-kicker">Additional services</div>
+        <div class="qt-section-helper">${step.extrasHelper || ""}</div>
         <div class="qt-services-grid">
           ${extrasHtml}
         </div>
@@ -495,8 +494,23 @@ function renderMoveDetails(step) {
 
       <div class="qt-refine-card">
         <div class="qt-kicker">Refine your estimate (optional)</div>
-        ${renderSliderRow("Large items", "qt-large-items", largeItems, 0, 20)}
-        ${renderSliderRow("Boxes", "qt-boxes", boxes, 0, 60)}
+        <div class="qt-section-helper">${step.refineHelper || ""}</div>
+        ${renderSliderRow(
+          step.sliders[0].label,
+          step.sliders[0].helper,
+          "qt-large-items",
+          largeItems,
+          0,
+          20
+        )}
+        ${renderSliderRow(
+          step.sliders[1].label,
+          step.sliders[1].helper,
+          "qt-boxes",
+          boxes,
+          0,
+          60
+        )}
       </div>
 
       <div class="qt-footer-actions">
