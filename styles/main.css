@@ -61,7 +61,7 @@ body {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 12px;
-  margin-bottom: 28px;
+  margin-bottom: 22px;
 }
 
 .qt-progress-segment {
@@ -84,11 +84,11 @@ body {
   color: #8a8a8a;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .qt-page-title {
-  margin: 0 0 10px;
+  margin: 0 0 8px;
   font-size: 54px;
   line-height: 0.95;
   letter-spacing: -0.05em;
@@ -97,7 +97,7 @@ body {
 }
 
 .qt-page-subtitle {
-  margin: 0 0 26px;
+  margin: 0 0 22px;
   font-size: 17px;
   line-height: 1.5;
   color: #7b7b7b;
@@ -106,16 +106,16 @@ body {
 
 .qt-property-list {
   display: grid;
-  gap: 18px;
-  margin-bottom: 24px;
+  gap: 14px;
+  margin-bottom: 22px;
 }
 
 .qt-property-card {
   width: 100%;
   border: 2px solid transparent;
   background: #fbfaf8;
-  border-radius: 28px;
-  padding: 28px 24px;
+  border-radius: 26px;
+  padding: 22px 22px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -133,18 +133,20 @@ body {
 .qt-property-card-left {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 16px;
+  min-width: 0;
 }
 
 .qt-property-icon {
-  width: 72px;
-  height: 72px;
-  border-radius: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 18px;
   background: #e8e5e0;
   color: #7a7a7a;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex: 0 0 auto;
 }
 
 .qt-property-icon.is-selected {
@@ -153,26 +155,26 @@ body {
 }
 
 .qt-property-icon svg {
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
 }
 
 .qt-property-title {
-  font-size: 24px;
+  font-size: 18px;
   line-height: 1.1;
   font-weight: 800;
   color: #222222;
 }
 
 .qt-property-desc {
-  margin-top: 6px;
-  font-size: 15px;
+  margin-top: 4px;
+  font-size: 14px;
   color: #7a7a7a;
 }
 
 .qt-radio {
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   border-radius: 999px;
   border: 3px solid #ddd8d1;
   box-sizing: border-box;
@@ -187,7 +189,7 @@ body {
 .qt-radio.is-selected::after {
   content: "";
   position: absolute;
-  inset: 6px;
+  inset: 5px;
   border-radius: 999px;
   background: #0e6f72;
 }
@@ -510,7 +512,7 @@ body {
   display: grid;
   grid-template-columns: 1fr 2.1fr;
   gap: 16px;
-  margin-top: 26px;
+  margin-top: 24px;
 }
 
 .qt-btn {
@@ -650,22 +652,42 @@ body {
     font-size: 38px;
   }
 
+  .qt-page-subtitle {
+    font-size: 16px;
+    margin-bottom: 18px;
+  }
+
+  .qt-property-list {
+    gap: 12px;
+  }
+
   .qt-property-card {
-    padding: 20px 18px;
-    border-radius: 24px;
+    padding: 18px 16px;
+    border-radius: 22px;
   }
 
   .qt-property-icon {
-    width: 62px;
-    height: 62px;
+    width: 54px;
+    height: 54px;
+    border-radius: 16px;
+  }
+
+  .qt-property-icon svg {
+    width: 26px;
+    height: 26px;
   }
 
   .qt-property-title {
-    font-size: 18px;
+    font-size: 17px;
   }
 
   .qt-property-desc {
-    font-size: 14px;
+    font-size: 13px;
+  }
+
+  .qt-radio {
+    width: 28px;
+    height: 28px;
   }
 
   .qt-line-input {
