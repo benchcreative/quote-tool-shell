@@ -89,8 +89,7 @@ function renderTopChrome() {
 
 function formatPropertySize(value) {
   const map = {
-    studio: "Studio",
-    "1_bed": "1 Bedroom",
+    studio_1_bed: "Studio / 1 Bedroom",
     "2_bed": "2 Bedroom",
     "3_bed": "3 Bedroom",
     "4_bed": "4 Bedroom",
@@ -231,58 +230,74 @@ function renderStepLabel() {
 }
 
 function renderPropertyIcon(value) {
-  if (value === "studio" || value === "1_bed") {
+  if (value === "studio_1_bed") {
     return `
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M4 11.5L12 5l8 6.5"></path>
-        <path d="M6.5 10.5V19h11v-8.5"></path>
-        <path d="M10.2 19v-4.8h3.6V19"></path>
+        <path d="M5 11.2L12 5.5l7 5.7"></path>
+        <path d="M7 10.6V19h10v-8.4"></path>
+        <path d="M10.2 19v-4.6h3.6V19"></path>
       </svg>
     `;
   }
 
-  if (value === "2_bed" || value === "3_bed") {
+  if (value === "2_bed") {
     return `
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
         <rect x="7" y="3.5" width="10" height="17" rx="1.8"></rect>
-        <path d="M10 7h1"></path>
-        <path d="M13 7h1"></path>
-        <path d="M10 10h1"></path>
-        <path d="M13 10h1"></path>
-        <path d="M10 13h1"></path>
-        <path d="M13 13h1"></path>
+        <path d="M10 7h1.2"></path>
+        <path d="M12.8 7H14"></path>
+        <path d="M10 10h1.2"></path>
+        <path d="M12.8 10H14"></path>
+        <path d="M10 13h1.2"></path>
+        <path d="M12.8 13H14"></path>
         <path d="M11 20.5v-3h2v3"></path>
       </svg>
     `;
   }
 
-  if (value === "4_bed" || value === "5_plus") {
+  if (value === "3_bed") {
     return `
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3.5 11.5L12 5l8.5 6.5"></path>
-        <path d="M6 10.5V19h12v-8.5"></path>
-        <path d="M9.5 19v-4.8h5V19"></path>
+        <path d="M4 10.8L12 4.8l8 6"></path>
+        <path d="M6.5 9.8V19h11V9.8"></path>
+        <path d="M9.2 12.2h2.2v2.2H9.2z"></path>
+        <path d="M12.6 12.2h2.2v2.2h-2.2z"></path>
+        <path d="M10.5 19v-4.5h3V19"></path>
+      </svg>
+    `;
+  }
+
+  if (value === "4_bed") {
+    return `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3.5 11L12 5l8.5 6"></path>
+        <path d="M6 10.2V19h12v-8.8"></path>
+        <path d="M8.8 12.2h2.1v2.1H8.8z"></path>
+        <path d="M13.1 12.2h2.1v2.1h-2.1z"></path>
+        <path d="M10.5 19v-4.6h3V19"></path>
       </svg>
     `;
   }
 
   return `
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="4" y="6" width="16" height="12" rx="2"></rect>
-      <path d="M8 10h8"></path>
-      <path d="M8 14h5"></path>
+      <path d="M2.8 11L12 4l9.2 7"></path>
+      <path d="M5.5 9.8V20h13V9.8"></path>
+      <path d="M8.4 11.8h2.2V14H8.4z"></path>
+      <path d="M13.4 11.8h2.2V14h-2.2z"></path>
+      <path d="M10.5 20v-5.2h3V20"></path>
+      <path d="M18.5 10h2.2v10h-2.2"></path>
     </svg>
   `;
 }
 
 function getPropertySubtitle(value) {
   const map = {
-    studio: "Small flat or bedsit",
-    "1_bed": "Small flat or bedsit",
+    studio_1_bed: "Small flat or bedsit",
     "2_bed": "Flat or small house",
-    "3_bed": "Flat or small house",
+    "3_bed": "House move",
     "4_bed": "Larger home",
-    "5_plus": "Larger home"
+    "5_plus": "Large family home"
   };
   return map[value] || "Property move";
 }
@@ -313,8 +328,8 @@ function renderSingleSelect(step) {
     <div class="qt-shell">
       ${renderTopChrome()}
       ${renderStepLabel()}
-      <h1 class="qt-page-title">What are you moving?</h1>
-      <p class="qt-page-subtitle">Select your property type for an accurate estimate</p>
+      <h1 class="qt-page-title">${step.title}</h1>
+      <p class="qt-page-subtitle">${step.subtitle}</p>
 
       <div class="qt-property-list">
         ${optionsHtml}
