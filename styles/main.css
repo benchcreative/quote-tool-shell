@@ -350,6 +350,13 @@ body {
   margin-top: 6px;
 }
 
+.qt-section-helper {
+  margin-top: 10px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #7b7b7b;
+}
+
 .qt-services-grid {
   display: flex;
   flex-wrap: wrap;
@@ -400,6 +407,14 @@ body {
   font-size: 16px;
   font-weight: 700;
   color: #0e6f72;
+}
+
+.qt-slider-helper {
+  margin: 2px 0 12px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #7b7b7b;
+  max-width: 620px;
 }
 
 .qt-slider {
@@ -721,34 +736,3 @@ body {
     grid-template-columns: 1fr 1fr 1fr;
     gap: 10px;
   }
-
-  .qt-benefit-card {
-    padding: 18px 10px;
-    border-radius: 20px;
-  }
-
-  .qt-benefit-text {
-    font-size: 14px;
-  }
-
-  .qt-footer-actions {
-    grid-template-columns: 1fr 1.6fr;
-  }
-
-  .qt-btn {
-    font-size: 18px;
-    padding: 18px 16px;
-  }
-
-  .qt-success-title {
-    font-size: 46px;
-  }
-
-  .qt-success-subtitle {
-    font-size: 17px;
-  }
-
-  .qt-next-step {
-    font-size: 18px;
-  }
-}
