@@ -6,6 +6,46 @@ const state = {
 let currentConfig = null;
 let googleMapsReady = false;
 
+/* =========================
+   Tracking
+========================= */
+
+const TRACKING_URL = "https://script.google.com/macros/s/AKfycbx0gJwbPQLu288N_HXIa4u1qVQM2LS1bxNL5hBZJiH2FwCfVApN6S7dYAdiGOSB3tHI/exec";
+const CUSTOMER_ID = "benchcreative-removals";
+const PAGE_ID = "removals";
+
+function getSessionId() {
+  let session = localStorage.getItem("estimatorSession");
+
+  if (!session) {
+    session = Math.random().toString(36).substring(2) + Date.now().toString(36);
+    localStorage.setItem("estimatorSession", session);
+  }
+
+  return session;
+}
+
+function trackStep(stepName) {
+  fetch(TRACKING_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      customer: CUSTOMER_ID,
+      session: getSessionId(),
+      step: stepName,
+      page: PAGE_ID
+    })
+  }).catch((error) => {
+    console.error("Tracking failed:", error);
+  });
+}
+
+/* =========================
+   Google Maps init
+========================= */
+
 window.initGoogleMapsAPI = function () {
   googleMapsReady = true;
   attachAutocompleteIfNeeded();
@@ -600,7 +640,7 @@ function renderThankYou() {
         <div class="qt-success-icon">✓</div>
         <h1 class="qt-success-title">You're all set</h1>
         <p class="qt-success-subtitle">
-          We've received your request. One of our moving consultants will be in touch within 24 hours to arrange a video or in-person survey.
+          We've received your request. One of our moving consultants will review your move and be in touch within 24 hours to arrange a video or in-person survey where needed.
         </p>
 
         <div class="qt-next-steps-card">
@@ -613,7 +653,7 @@ function renderThankYou() {
 
           <div class="qt-next-step">
             <span class="qt-next-step-number">2</span>
-            <span>A consultant contacts you to arrange a video or in-person survey</span>
+            <span>We arrange a video or in-person survey if needed</span>
           </div>
 
           <div class="qt-next-step">
@@ -662,6 +702,7 @@ function goToPreviousStep() {
 function restartTool() {
   state.currentStep = 0;
   state.answers = {};
+  localStorage.removeItem("estimatorSession");
   renderCurrentStep();
 }
 
@@ -891,7 +932,11 @@ function attachContactEvents() {
   if (emailInput) emailInput.addEventListener("input", updateContactState);
   if (notesInput) notesInput.addEventListener("input", updateContactState);
 
-  if (nextButton) nextButton.addEventListener("click", goToNextStep);
+  if (nextButton) nextButton.addEventListener("click", function () {
+    trackStep("contact_submit");
+    goToNextStep();
+  });
+
   if (backButton) backButton.addEventListener("click", goToPreviousStep);
 }
 
@@ -917,6 +962,15 @@ function renderCurrentStep() {
 
   const step = currentConfig.steps[state.currentStep];
   app.innerHTML = renderStep(step);
+
+  // Track visible step
+  if (step.id === "property_size") trackStep("property_size");
+  if (step.id === "addresses") trackStep("addresses");
+  if (step.id === "move_details") trackStep("move_details");
+  if (step.id === "estimate") trackStep("result");
+  if (step.id === "contact") trackStep("contact");
+  if (step.id === "thank_you") trackStep("thank_you");
+
   attachStepEvents(step);
 }
 
@@ -935,6 +989,7 @@ async function initQuoteTool() {
       state.answers.large_items = moveDetailsStep?.sliders?.[0]?.default ?? 0;
     }
 
+    trackStep("tool_start");
     renderCurrentStep();
   } catch (error) {
     console.error(error);
