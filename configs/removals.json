@@ -79,14 +79,18 @@
       "type": "move-details",
       "title": "A few more details",
       "subtitle": "Help us make the estimate more accurate.",
+      "extrasHelper": "Select any extra services needed",
+      "refineHelper": "Add a rough number of larger items and boxes for a more tailored estimate.",
       "extrasOptions": [
-        { "label": "Full packing service", "value": "full_packing" },
-        { "label": "Fragile item packing", "value": "fragile_packing" },
-        { "label": "Furniture dismantling", "value": "dismantling" },
-        { "label": "No additional services", "value": "none" }
+        { "label": "Packing", "value": "full_packing" },
+        { "label": "Fragile packing", "value": "fragile_packing" },
+        { "label": "Furniture disassembly", "value": "dismantling" },
+        { "label": "No extras", "value": "none" }
       ],
+      "accessLabel": "Access / parking details",
+      "accessPlaceholder": "Select access details",
       "accessOptions": [
-        { "label": "Easy access / driveway", "value": "easy_access" },
+        { "label": "Easy access both ends", "value": "easy_access" },
         { "label": "One flight of stairs", "value": "one_flight" },
         { "label": "Multiple flights / no lift", "value": "multiple_flights" },
         { "label": "Restricted parking / difficult access", "value": "restricted_parking" }
@@ -94,7 +98,8 @@
       "sliders": [
         {
           "id": "large_items",
-          "label": "Estimated large items",
+          "label": "Large items",
+          "helper": "Items that usually need 2 people to carry, like sofas, mattresses, wardrobes or fridge freezers.",
           "min": 0,
           "max": 20,
           "step": 1,
@@ -102,7 +107,8 @@
         },
         {
           "id": "boxes",
-          "label": "Estimated boxes",
+          "label": "Boxes",
+          "helper": "Approximate number of packed boxes you expect to move.",
           "min": 0,
           "max": 60,
           "step": 1,
