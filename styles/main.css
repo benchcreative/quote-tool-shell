@@ -346,15 +346,15 @@ body {
   margin-bottom: 18px;
 }
 
-.qt-services-block {
-  margin-top: 6px;
-}
-
 .qt-section-helper {
   margin-top: 10px;
   font-size: 15px;
   line-height: 1.5;
   color: #7b7b7b;
+}
+
+.qt-services-block {
+  margin-top: 6px;
 }
 
 .qt-services-grid {
@@ -451,7 +451,7 @@ body {
 
 .qt-estimate-hero {
   text-align: center;
-  margin-bottom: 22px;
+  margin-bottom: 18px;
 }
 
 .qt-estimate-number {
@@ -463,21 +463,27 @@ body {
   color: #222222;
 }
 
+.qt-estimate-number-single {
+  font-size: 72px;
+  line-height: 1.02;
+  letter-spacing: -0.05em;
+}
+
 .qt-estimate-caption {
-  margin-top: 20px;
+  margin-top: 18px;
   font-size: 18px;
   color: #7a7a7a;
 }
 
 .qt-summary-card {
-  margin-bottom: 22px;
+  margin-bottom: 18px;
 }
 
 .qt-summary-line {
   display: flex;
   justify-content: space-between;
   gap: 18px;
-  padding: 20px 0;
+  padding: 18px 0;
   border-bottom: 1px solid #e6e2dc;
   font-size: 18px;
 }
@@ -497,30 +503,15 @@ body {
   text-align: right;
 }
 
-.qt-benefits-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.qt-benefit-card {
-  background: #fbfaf8;
-  border-radius: 24px;
-  padding: 22px 14px;
+.qt-estimate-next {
+  margin: 0 0 14px;
   text-align: center;
 }
 
-.qt-benefit-icon {
-  font-size: 28px;
-  color: #0e6f72;
-}
-
-.qt-benefit-text {
-  margin-top: 12px;
-  font-size: 16px;
-  line-height: 1.35;
-  color: #676767;
+.qt-estimate-next-copy {
+  font-size: 18px;
+  font-weight: 700;
+  color: #4f4f4f;
 }
 
 .qt-footer-actions {
@@ -732,7 +723,42 @@ body {
     font-size: 66px;
   }
 
-  .qt-benefits-grid {
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 10px;
+  .qt-estimate-number-single {
+    font-size: 44px;
+    line-height: 1.08;
   }
+
+  .qt-estimate-caption {
+    font-size: 16px;
+  }
+
+  .qt-summary-line {
+    font-size: 16px;
+    padding: 16px 0;
+  }
+
+  .qt-estimate-next-copy {
+    font-size: 16px;
+  }
+
+  .qt-footer-actions {
+    grid-template-columns: 1fr 1.6fr;
+  }
+
+  .qt-btn {
+    font-size: 18px;
+    padding: 18px 16px;
+  }
+
+  .qt-success-title {
+    font-size: 46px;
+  }
+
+  .qt-success-subtitle {
+    font-size: 17px;
+  }
+
+  .qt-next-step {
+    font-size: 18px;
+  }
+}
