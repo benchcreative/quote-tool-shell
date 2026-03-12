@@ -4,8 +4,7 @@
   "kicker": "Estimates in under 60 seconds",
   "pricing": {
     "basePrices": {
-      "studio": 250,
-      "1_bed": 425,
+      "studio_1_bed": 425,
       "2_bed": 700,
       "3_bed": 1050,
       "4_bed": 1450,
@@ -59,11 +58,10 @@
     {
       "id": "property_size",
       "type": "single-select",
-      "title": "What size property are you moving from?",
-      "subtitle": "This helps us estimate the size of the move.",
+      "title": "Select your property size",
+      "subtitle": "Choose the closest match for an accurate estimate",
       "options": [
-        { "label": "Studio", "value": "studio" },
-        { "label": "1 Bedroom", "value": "1_bed" },
+        { "label": "Studio / 1 Bedroom", "value": "studio_1_bed" },
         { "label": "2 Bedroom", "value": "2_bed" },
         { "label": "3 Bedroom", "value": "3_bed" },
         { "label": "4 Bedroom", "value": "4_bed" },
