@@ -49,8 +49,7 @@
       "restricted_parking": 75
     },
     "volumeAdjustments": {
-      "largeItemUnit": 18,
-      "boxUnit": 4
+      "largeItemUnit": 18
     },
     "rangePercent": 12
   },
@@ -80,7 +79,7 @@
       "title": "A few more details",
       "subtitle": "Help us make the estimate more accurate.",
       "extrasHelper": "Select any extra services needed",
-      "refineHelper": "Add a rough number of larger items and boxes for a more tailored estimate.",
+      "refineHelper": "Add a rough number of large items for a more tailored estimate.",
       "extrasOptions": [
         { "label": "Packing", "value": "full_packing" },
         { "label": "Fragile packing", "value": "fragile_packing" },
@@ -99,18 +98,9 @@
         {
           "id": "large_items",
           "label": "Large items",
-          "helper": "Items that usually need 2 people to carry, like sofas, mattresses, wardrobes or fridge freezers.",
+          "helper": "Items needing 2 people to carry, like sofas, mattresses, wardrobes or fridge freezers.",
           "min": 0,
           "max": 20,
-          "step": 1,
-          "default": 0
-        },
-        {
-          "id": "boxes",
-          "label": "Boxes",
-          "helper": "Approximate number of packed boxes you expect to move.",
-          "min": 0,
-          "max": 60,
           "step": 1,
           "default": 0
         }
