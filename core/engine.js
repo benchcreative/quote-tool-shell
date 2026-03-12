@@ -10,7 +10,7 @@ let googleMapsReady = false;
    Tracking
 ========================= */
 
-const TRACKING_URL = "https://script.google.com/macros/s/AKfycbx0gJwbPQLu288N_HXIa4u1qVQM2LS1bxNL5hBZJiH2FwCfVApN6S7dYAdiGOSB3tHl/exec";
+const TRACKING_URL = "https://script.google.com/macros/s/AKfycbx0gJwbPQLu288N_HXIa4u1qVQM2LS1bxNL5hBZJiH2FwCfVApN6S7dYAdiGOSB3tHI/exec";
 const CUSTOMER_ID = "benchcreative-removals";
 const PAGE_ID = "removals";
 
@@ -26,20 +26,15 @@ function getSessionId() {
 }
 
 function trackStep(stepName) {
-  fetch(TRACKING_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      customer: CUSTOMER_ID,
-      session: getSessionId(),
-      step: stepName,
-      page: PAGE_ID
-    })
-  }).catch((error) => {
-    console.error("Tracking failed:", error);
+  const params = new URLSearchParams({
+    customer: CUSTOMER_ID,
+    session: getSessionId(),
+    step: stepName,
+    page: PAGE_ID
   });
+
+  const img = new Image();
+  img.src = `${TRACKING_URL}?${params.toString()}`;
 }
 
 /* =========================
@@ -963,7 +958,6 @@ function renderCurrentStep() {
   const step = currentConfig.steps[state.currentStep];
   app.innerHTML = renderStep(step);
 
-  // Track visible step
   if (step.id === "property_size") trackStep("property_size");
   if (step.id === "addresses") trackStep("addresses");
   if (step.id === "move_details") trackStep("move_details");
