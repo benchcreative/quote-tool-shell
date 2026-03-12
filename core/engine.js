@@ -105,24 +105,12 @@ function formatExtras(values) {
 
   const map = {
     full_packing: "Packing",
-    fragile_packing: "Fragile",
-    dismantling: "Disassembly",
+    fragile_packing: "Fragile packing",
+    dismantling: "Furniture disassembly",
     none: "No extras"
   };
 
   return values.map((value) => map[value] || value).join(", ");
-}
-
-function formatMoveDateSummary() {
-  const type = state.answers.move_date_type;
-  const exactDate = state.answers.exact_move_date;
-  const approxMonth = state.answers.approx_move_month;
-
-  if (type === "exact") return exactDate || "Exact date not provided";
-  if (type === "approx") return approxMonth || "Estimated month not provided";
-  if (type === "not_sure") return "ASAP / not sure";
-
-  return "Not provided";
 }
 
 function getAddressLabel(answerKey) {
@@ -149,10 +137,6 @@ function getDistanceBandFromMiles(miles) {
 
 function getLargeItemsCount() {
   return Number(state.answers.large_items || 0);
-}
-
-function getBoxesCount() {
-  return Number(state.answers.boxes || 0);
 }
 
 async function calculateRouteDistanceMiles() {
@@ -217,7 +201,6 @@ function calculateEstimate() {
   }
 
   total += getLargeItemsCount() * (volumeAdjustments.largeItemUnit || 0);
-  total += getBoxesCount() * (volumeAdjustments.boxUnit || 0);
 
   const min = Math.round(total * (1 - rangePercent / 100));
   const max = Math.round(total * (1 + rangePercent / 100));
@@ -433,7 +416,6 @@ function renderMoveDetails(step) {
   const exactDate = state.answers.exact_move_date || "";
   const approxMonth = state.answers.approx_move_month || "";
   const largeItems = Number(state.answers.large_items ?? step.sliders[0].default ?? 0);
-  const boxes = Number(state.answers.boxes ?? step.sliders[1].default ?? 0);
 
   let extrasHtml = "";
   for (const option of step.extrasOptions) {
@@ -503,14 +485,6 @@ function renderMoveDetails(step) {
           0,
           20
         )}
-        ${renderSliderRow(
-          step.sliders[1].label,
-          step.sliders[1].helper,
-          "qt-boxes",
-          boxes,
-          0,
-          60
-        )}
       </div>
 
       <div class="qt-footer-actions">
@@ -535,7 +509,7 @@ function renderEstimate() {
 
       <div class="qt-estimate-hero">
         <div class="qt-kicker qt-kicker-centered">Estimated cost</div>
-        <div class="qt-estimate-number">£${estimate.min.toLocaleString()} –<br>£${estimate.max.toLocaleString()}</div>
+        <div class="qt-estimate-number qt-estimate-number-single">£${estimate.min.toLocaleString()} – £${estimate.max.toLocaleString()}</div>
         <div class="qt-estimate-caption">Final price confirmed after survey</div>
       </div>
 
@@ -560,34 +534,15 @@ function renderEstimate() {
           <span>Extras</span>
           <strong>${extras.length ? `${extras.length} service${extras.length > 1 ? "s" : ""}` : "None"}</strong>
         </div>
-        <div class="qt-summary-line">
-          <span>Large items</span>
-          <strong>${getLargeItemsCount()}</strong>
-        </div>
-        <div class="qt-summary-line">
-          <span>Boxes</span>
-          <strong>${getBoxesCount()}</strong>
-        </div>
       </div>
 
-      <div class="qt-benefits-grid">
-        <div class="qt-benefit-card">
-          <div class="qt-benefit-icon">✓</div>
-          <div class="qt-benefit-text">Fully insured</div>
-        </div>
-        <div class="qt-benefit-card">
-          <div class="qt-benefit-icon">⏱</div>
-          <div class="qt-benefit-text">On-time guarantee</div>
-        </div>
-        <div class="qt-benefit-card">
-          <div class="qt-benefit-icon">👥</div>
-          <div class="qt-benefit-text">Vetted crew</div>
-        </div>
+      <div class="qt-estimate-next">
+        <div class="qt-estimate-next-copy">Ready for a confirmed quote?</div>
       </div>
 
       <div class="qt-footer-actions">
         <button class="qt-btn qt-btn-secondary" id="qt-back">Back</button>
-        <button class="qt-btn qt-btn-primary" id="qt-next">Continue</button>
+        <button class="qt-btn qt-btn-primary" id="qt-next">Get my detailed quote</button>
       </div>
     </div>
   `;
@@ -829,7 +784,6 @@ function attachMoveDetailsEvents() {
   const accessSelect = document.getElementById("qt-access-select");
   const dateButtons = document.querySelectorAll("[data-date-type]");
   const largeItemsInput = document.getElementById("qt-large-items");
-  const boxesInput = document.getElementById("qt-boxes");
   const nextButton = document.getElementById("qt-next");
   const backButton = document.getElementById("qt-back");
 
@@ -898,14 +852,6 @@ function attachMoveDetailsEvents() {
       state.answers.large_items = Number(largeItemsInput.value);
       const valueEl = largeItemsInput.closest(".qt-slider-row")?.querySelector(".qt-slider-value");
       if (valueEl) valueEl.textContent = largeItemsInput.value;
-    });
-  }
-
-  if (boxesInput) {
-    boxesInput.addEventListener("input", function () {
-      state.answers.boxes = Number(boxesInput.value);
-      const valueEl = boxesInput.closest(".qt-slider-row")?.querySelector(".qt-slider-value");
-      if (valueEl) valueEl.textContent = boxesInput.value;
     });
   }
 
@@ -987,7 +933,6 @@ async function initQuoteTool() {
     if (typeof state.answers.large_items === "undefined") {
       const moveDetailsStep = currentConfig.steps.find((step) => step.id === "move_details");
       state.answers.large_items = moveDetailsStep?.sliders?.[0]?.default ?? 0;
-      state.answers.boxes = moveDetailsStep?.sliders?.[1]?.default ?? 0;
     }
 
     renderCurrentStep();
