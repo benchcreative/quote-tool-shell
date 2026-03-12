@@ -600,7 +600,7 @@ function renderThankYou() {
         <div class="qt-success-icon">✓</div>
         <h1 class="qt-success-title">You're all set</h1>
         <p class="qt-success-subtitle">
-          We've received your request. One of our moving consultants will be in touch within 30 minutes with a detailed quote.
+          We've received your request. One of our moving consultants will be in touch within 24 hours to arrange a video or in-person survey.
         </p>
 
         <div class="qt-next-steps-card">
@@ -613,7 +613,7 @@ function renderThankYou() {
 
           <div class="qt-next-step">
             <span class="qt-next-step-number">2</span>
-            <span>A consultant contacts you to confirm</span>
+            <span>A consultant contacts you to arrange a video or in-person survey</span>
           </div>
 
           <div class="qt-next-step">
