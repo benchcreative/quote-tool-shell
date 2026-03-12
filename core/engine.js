@@ -10,27 +10,28 @@ let googleMapsReady = false;
    Tracking
 ========================= */
 
-const TRACKING_URL = "https://script.google.com/macros/s/AKfycbx0gJwbPQLu288N_HXIa4u1qVQM2LS1bxNL5hBZJiH2FwCfVApN6S7dYAdiGOSB3tHl/exec";
+const TRACKING_URL = "https://script.google.com/macros/s/AKfycbx0gJwbPQLu288N_HXIa4u1qVQM2LS1bxNL5hBZJiH2FwCfVApN6S7dYAdiGOSB3tHI/exec";
 const CUSTOMER_ID = "benchcreative-removals";
 const PAGE_ID = "removals";
 
 function getSessionId() {
-  let session = localStorage.getItem("estimatorSession");
+  let session = sessionStorage.getItem("estimatorSession");
 
   if (!session) {
     session = Math.random().toString(36).substring(2) + Date.now().toString(36);
-    localStorage.setItem("estimatorSession", session);
+    sessionStorage.setItem("estimatorSession", session);
   }
 
   return session;
 }
 
-function trackStep(stepName) {
+function trackStep(stepName, value = "") {
   const params = new URLSearchParams({
     customer: CUSTOMER_ID,
     session: getSessionId(),
     step: stepName,
-    page: PAGE_ID
+    page: PAGE_ID,
+    value: value
   });
 
   const img = new Image();
@@ -131,21 +132,6 @@ function formatPropertySize(value) {
     "5_plus": "5+ Bedroom"
   };
   return map[value] || value || "Not provided";
-}
-
-function formatExtras(values) {
-  if (!Array.isArray(values) || values.length === 0) {
-    return "None selected";
-  }
-
-  const map = {
-    full_packing: "Packing",
-    fragile_packing: "Fragile packing",
-    dismantling: "Furniture disassembly",
-    none: "No extras"
-  };
-
-  return values.map((value) => map[value] || value).join(", ");
 }
 
 function getAddressLabel(answerKey) {
@@ -697,7 +683,7 @@ function goToPreviousStep() {
 function restartTool() {
   state.currentStep = 0;
   state.answers = {};
-  localStorage.removeItem("estimatorSession");
+  sessionStorage.removeItem("estimatorSession");
   renderCurrentStep();
 }
 
@@ -776,6 +762,7 @@ function attachSingleSelectEvents(step) {
     button.addEventListener("click", function () {
       const value = button.getAttribute("data-value");
       state.answers[step.id] = value;
+      trackStep("property_size_selected", value);
       renderCurrentStep();
     });
   });
@@ -844,6 +831,7 @@ function attachMoveDetailsEvents() {
       }
 
       state.answers.extras = selectedValues;
+      trackStep("extras_updated", selectedValues.join(","));
       renderCurrentStep();
     });
   });
@@ -851,6 +839,7 @@ function attachMoveDetailsEvents() {
   if (accessSelect) {
     accessSelect.addEventListener("change", function () {
       state.answers.access_type = accessSelect.value;
+      trackStep("access_selected", accessSelect.value);
       if (nextButton) nextButton.disabled = !isMoveDetailsValid();
     });
   }
@@ -863,6 +852,7 @@ function attachMoveDetailsEvents() {
       if (value !== "exact") state.answers.exact_move_date = "";
       if (value !== "approx") state.answers.approx_move_month = "";
 
+      trackStep("date_type_selected", value);
       renderCurrentStep();
     });
   });
@@ -899,7 +889,13 @@ function attachEstimateEvents() {
   const nextButton = document.getElementById("qt-next");
   const backButton = document.getElementById("qt-back");
 
-  if (nextButton) nextButton.addEventListener("click", goToNextStep);
+  if (nextButton) {
+    nextButton.addEventListener("click", function () {
+      trackStep("result_cta_clicked", "get_my_detailed_quote");
+      goToNextStep();
+    });
+  }
+
   if (backButton) backButton.addEventListener("click", goToPreviousStep);
 }
 
@@ -927,10 +923,12 @@ function attachContactEvents() {
   if (emailInput) emailInput.addEventListener("input", updateContactState);
   if (notesInput) notesInput.addEventListener("input", updateContactState);
 
-  if (nextButton) nextButton.addEventListener("click", function () {
-    trackStep("contact_submit");
-    goToNextStep();
-  });
+  if (nextButton) {
+    nextButton.addEventListener("click", function () {
+      trackStep("contact_submit");
+      goToNextStep();
+    });
+  }
 
   if (backButton) backButton.addEventListener("click", goToPreviousStep);
 }
@@ -958,12 +956,12 @@ function renderCurrentStep() {
   const step = currentConfig.steps[state.currentStep];
   app.innerHTML = renderStep(step);
 
-  if (step.id === "property_size") trackStep("property_size");
-  if (step.id === "addresses") trackStep("addresses");
-  if (step.id === "move_details") trackStep("move_details");
-  if (step.id === "estimate") trackStep("result");
-  if (step.id === "contact") trackStep("contact");
-  if (step.id === "thank_you") trackStep("thank_you");
+  if (step.id === "property_size") trackStep("step_view_property_size");
+  if (step.id === "addresses") trackStep("step_view_addresses");
+  if (step.id === "move_details") trackStep("step_view_move_details");
+  if (step.id === "estimate") trackStep("step_view_result");
+  if (step.id === "contact") trackStep("step_view_contact");
+  if (step.id === "thank_you") trackStep("step_view_thank_you");
 
   attachStepEvents(step);
 }
