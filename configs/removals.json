@@ -1,7 +1,7 @@
 {
   "tool": "removals",
-  "name": "MoveEstimate",
-  "kicker": "Estimates in under 60 seconds",
+  "name": "Swiftimate",
+  "kicker": "Estimates in under 30 seconds",
   "pricing": {
     "basePrices": {
       "studio_1_bed": 225,
