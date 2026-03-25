@@ -4,11 +4,11 @@
   "kicker": "Estimates in under 60 seconds",
   "pricing": {
     "basePrices": {
-      "studio_1_bed": 425,
-      "2_bed": 700,
-      "3_bed": 1050,
-      "4_bed": 1450,
-      "5_plus": 2000
+      "studio_1_bed": 225,
+      "2_bed": 400,
+      "3_bed": 650,
+      "4_bed": 950,
+      "5_plus": 1200
     },
     "distanceBands": {
       "band_0_10": {
