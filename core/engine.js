@@ -20,6 +20,14 @@ function getRefFromUrl() {
 }
 
 const SOURCE_REF = getRefFromUrl();
+let RECEIVED_REF = SOURCE_REF;
+
+window.addEventListener('message', function(event) {
+  if (event.origin !== 'https://benchcreative.co.uk') return;
+  if (event.data && event.data.ref) {
+    RECEIVED_REF = event.data.ref;
+  }
+});
 
 function getSessionId() {
   let session = sessionStorage.getItem("estimatorSession");
@@ -39,7 +47,7 @@ function trackStep(stepName, value = "") {
     step: stepName,
     page: PAGE_ID,
     value: value,
-    ref: SOURCE_REF
+    ref: RECEIVED_REF
   });
 
   const img = new Image();
