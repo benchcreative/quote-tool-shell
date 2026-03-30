@@ -38,7 +38,8 @@ function trackStep(stepName, value = "") {
     session: getSessionId(),
     step: stepName,
     page: PAGE_ID,
-    value: value
+    value: value,
+    ref: SOURCE_REF
   });
 
   const img = new Image();
