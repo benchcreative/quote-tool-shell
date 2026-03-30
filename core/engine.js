@@ -14,6 +14,13 @@ const TRACKING_URL = "https://script.google.com/macros/s/AKfycbwnkMTJGHoXqkuIIi3
 const CUSTOMER_ID = "benchcreative-removals";
 const PAGE_ID = "removals";
 
+function getRefFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("ref") || "";
+}
+
+const SOURCE_REF = getRefFromUrl();
+
 function getSessionId() {
   let session = sessionStorage.getItem("estimatorSession");
 
@@ -31,7 +38,8 @@ function trackStep(stepName, value = "") {
     session: getSessionId(),
     step: stepName,
     page: PAGE_ID,
-    value: value
+    value: value,
+    ref: SOURCE_REF
   });
 
   const img = new Image();
@@ -249,12 +257,11 @@ function renderPropertyIcon(value) {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
         <rect x="7" y="3.5" width="10" height="17" rx="1.8"></rect>
         <path d="M10 7h1.2"></path>
-        <path d="M12.8 7H14"></path>
         <path d="M10 10h1.2"></path>
-        <path d="M12.8 10H14"></path>
         <path d="M10 13h1.2"></path>
-        <path d="M12.8 13H14"></path>
-        <path d="M11 20.5v-3h2v3"></path>
+        <path d="M5 8.5H7"></path>
+        <path d="M5 12H7"></path>
+        <path d="M5 15.5H7"></path>
       </svg>
     `;
   }
@@ -262,11 +269,9 @@ function renderPropertyIcon(value) {
   if (value === "3_bed") {
     return `
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M4 10.8L12 4.8l8 6"></path>
-        <path d="M6.5 9.8V19h11V9.8"></path>
-        <path d="M9.2 12.2h2.2v2.2H9.2z"></path>
-        <path d="M12.6 12.2h2.2v2.2h-2.2z"></path>
-        <path d="M10.5 19v-4.5h3V19"></path>
+        <path d="M3 10.5L12 4l9 6.5"></path>
+        <path d="M5 9.5V20h14V9.5"></path>
+        <path d="M9.5 20v-5h5v5"></path>
       </svg>
     `;
   }
@@ -274,376 +279,282 @@ function renderPropertyIcon(value) {
   if (value === "4_bed") {
     return `
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3.5 11L12 5l8.5 6"></path>
-        <path d="M6 10.2V19h12v-8.8"></path>
-        <path d="M8.8 12.2h2.1v2.1H8.8z"></path>
-        <path d="M13.1 12.2h2.1v2.1h-2.1z"></path>
-        <path d="M10.5 19v-4.6h3V19"></path>
+        <path d="M2 11L12 4l10 7"></path>
+        <path d="M4 10V20h16V10"></path>
+        <path d="M9 20v-6h6v6"></path>
+        <path d="M9 11h1.2"></path>
+        <path d="M13.8 11H15"></path>
       </svg>
     `;
   }
 
   return `
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M2.8 11L12 4l9.2 7"></path>
-      <path d="M5.5 9.8V20h13V9.8"></path>
-      <path d="M8.4 11.8h2.2V14H8.4z"></path>
-      <path d="M13.4 11.8h2.2V14h-2.2z"></path>
-      <path d="M10.5 20v-5.2h3V20"></path>
-      <path d="M18.5 10h2.2v10h-2.2"></path>
+      <path d="M1 11.5L12 3.5l11 8"></path>
+      <path d="M3 10V21h18V10"></path>
+      <path d="M9 21v-7h6v7"></path>
+      <path d="M9 10.5h1.2"></path>
+      <path d="M13.8 10.5H15"></path>
+      <path d="M9 14h1.2"></path>
+      <path d="M13.8 14H15"></path>
     </svg>
   `;
 }
 
-function getPropertySubtitle(value) {
-  const map = {
-    studio_1_bed: "Small flat or bedsit",
-    "2_bed": "Flat or small house",
-    "3_bed": "House move",
-    "4_bed": "Larger home",
-    "5_plus": "Large family home"
-  };
-  return map[value] || "Property move";
-}
-
 function renderSingleSelect(step) {
-  const selectedValue = state.answers[step.id] || "";
+  const options = step.options || [];
+  const selected = state.answers[step.id];
 
-  let optionsHtml = "";
-  for (const option of step.options) {
-    const selectedClass = selectedValue === option.value ? "is-selected" : "";
-    optionsHtml += `
-      <button class="qt-property-card ${selectedClass}" data-value="${option.value}" type="button">
-        <div class="qt-property-card-left">
-          <div class="qt-property-icon ${selectedValue === option.value ? "is-selected" : ""}">
-            ${renderPropertyIcon(option.value)}
-          </div>
-          <div class="qt-property-copy">
-            <div class="qt-property-title">${option.label}</div>
-            <div class="qt-property-desc">${getPropertySubtitle(option.value)}</div>
-          </div>
+  const cards = options.map((opt) => {
+    const isSelected = selected === opt.value;
+    return `
+      <button
+        class="qt-property-card${isSelected ? " is-selected" : ""}"
+        data-value="${opt.value}"
+        type="button"
+      >
+        <div class="qt-property-icon">
+          ${renderPropertyIcon(opt.value)}
         </div>
-        <div class="qt-radio ${selectedValue === option.value ? "is-selected" : ""}"></div>
+        <div class="qt-property-label">${opt.label}</div>
       </button>
     `;
-  }
+  }).join("");
+
+  const hasSelection = !!selected;
 
   return `
     <div class="qt-shell">
       ${renderTopChrome()}
-      ${renderStepLabel()}
-      <h1 class="qt-page-title">${step.title}</h1>
-      <p class="qt-page-subtitle">${step.subtitle}</p>
-
-      <div class="qt-property-list">
-        ${optionsHtml}
+      <div class="qt-body">
+        ${renderStepLabel()}
+        <div class="qt-heading">${step.title}</div>
+        ${step.subtitle ? `<div class="qt-subheading">${step.subtitle}</div>` : ""}
+        <div class="qt-property-grid">${cards}</div>
       </div>
-
-      <div class="qt-footer-actions">
-        <button class="qt-btn qt-btn-secondary" id="qt-back" ${state.currentStep === 0 ? "disabled" : ""}>Back</button>
-        <button class="qt-btn qt-btn-primary" id="qt-next" ${selectedValue ? "" : "disabled"}>Continue</button>
+      <div class="qt-footer">
+        <button id="qt-back" class="qt-btn qt-btn--ghost" type="button" ${state.currentStep === 0 ? "disabled" : ""}>Back</button>
+        <button id="qt-next" class="qt-btn qt-btn--primary" type="button" ${!hasSelection ? "disabled" : ""}>Next</button>
       </div>
     </div>
   `;
 }
 
-function renderAddresses() {
+function renderAddresses(step) {
   const fromValue = getAddressLabel("moving_from");
   const toValue = getAddressLabel("moving_to");
+  const isValid = fromValue.trim() && toValue.trim();
 
   return `
     <div class="qt-shell">
       ${renderTopChrome()}
-      <h1 class="qt-page-title">Where are you moving?</h1>
-      <p class="qt-page-subtitle">Enter your collection and delivery postcodes</p>
-
-      <div class="qt-address-card">
-        <div class="qt-address-row">
-          <div class="qt-address-icon is-primary">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 21s6-5.7 6-11a6 6 0 1 0-12 0c0 5.3 6 11 6 11z"></path>
-              <circle cx="12" cy="10" r="2.5"></circle>
-            </svg>
+      <div class="qt-body">
+        ${renderStepLabel()}
+        <div class="qt-heading">${step.title}</div>
+        ${step.subtitle ? `<div class="qt-subheading">${step.subtitle}</div>` : ""}
+        <div class="qt-address-fields">
+          <div class="qt-field">
+            <label class="qt-label" for="qt-moving-from">Moving from</label>
+            <input class="qt-input" id="qt-moving-from" type="text" placeholder="Town or postcode" value="${fromValue}" autocomplete="off" />
           </div>
-          <div class="qt-address-content">
-            <div class="qt-address-label">Collecting from</div>
-            <input
-              class="qt-line-input"
-              id="qt-moving-from"
-              type="text"
-              placeholder="Postcode or address"
-              value="${fromValue}"
-              autocomplete="off"
-            />
-          </div>
-        </div>
-
-        <div class="qt-address-divider"></div>
-
-        <div class="qt-address-row">
-          <div class="qt-address-icon is-secondary">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 21s6-5.7 6-11a6 6 0 1 0-12 0c0 5.3 6 11 6 11z"></path>
-              <circle cx="12" cy="10" r="2.5"></circle>
-            </svg>
-          </div>
-          <div class="qt-address-content">
-            <div class="qt-address-label">Delivering to</div>
-            <input
-              class="qt-line-input"
-              id="qt-moving-to"
-              type="text"
-              placeholder="Postcode or address"
-              value="${toValue}"
-              autocomplete="off"
-            />
+          <div class="qt-field">
+            <label class="qt-label" for="qt-moving-to">Moving to</label>
+            <input class="qt-input" id="qt-moving-to" type="text" placeholder="Town or postcode" value="${toValue}" autocomplete="off" />
           </div>
         </div>
       </div>
-
-      <div class="qt-footer-actions">
-        <button class="qt-btn qt-btn-secondary" id="qt-back">Back</button>
-        <button class="qt-btn qt-btn-primary" id="qt-next" ${(fromValue.trim() && toValue.trim()) ? "" : "disabled"}>Continue</button>
+      <div class="qt-footer">
+        <button id="qt-back" class="qt-btn qt-btn--ghost" type="button">Back</button>
+        <button id="qt-next" class="qt-btn qt-btn--primary" type="button" ${!isValid ? "disabled" : ""}>Next</button>
       </div>
     </div>
   `;
 }
 
-function renderSliderRow(label, helper, inputId, value, min, max) {
-  return `
-    <div class="qt-slider-row">
-      <div class="qt-slider-top">
-        <span class="qt-slider-label">${label}</span>
-        <span class="qt-slider-value">${value}</span>
-      </div>
-      <div class="qt-slider-helper">${helper || ""}</div>
-      <input
-        class="qt-slider"
-        id="${inputId}"
-        type="range"
-        min="${min}"
-        max="${max}"
-        step="1"
-        value="${value}"
-      />
-    </div>
-  `;
+function isMoveDetailsValid() {
+  const dateType = state.answers.move_date_type;
+  const accessType = state.answers.access_type;
+
+  if (!dateType || !accessType) return false;
+  if (dateType === "exact" && !state.answers.exact_move_date) return false;
+  if (dateType === "approx" && !state.answers.approx_move_month) return false;
+
+  return true;
 }
 
 function renderMoveDetails(step) {
-  const selectedExtras = state.answers.extras || [];
-  const accessValue = state.answers.access_type || "";
-  const selectedType = state.answers.move_date_type || "";
-  const exactDate = state.answers.exact_move_date || "";
-  const approxMonth = state.answers.approx_move_month || "";
-  const largeItems = Number(state.answers.large_items ?? step.sliders[0].default ?? 0);
+  const extras = step.extras || [];
+  const sliders = step.sliders || [];
+  const accessOptions = step.accessOptions || [];
+  const dateOptions = step.dateOptions || [];
 
-  let extrasHtml = "";
-  for (const option of step.extrasOptions) {
-    const selectedClass = selectedExtras.includes(option.value) ? "is-selected" : "";
-    extrasHtml += `
-      <button class="qt-service-chip ${selectedClass}" data-extra-value="${option.value}" type="button">
-        ${option.label}
+  const selectedExtras = state.answers.extras || [];
+  const selectedAccess = state.answers.access_type || "";
+  const selectedDateType = state.answers.move_date_type || "";
+  const largeItems = state.answers.large_items ?? (sliders[0]?.default ?? 0);
+
+  const extraButtons = extras.map((extra) => {
+    const isSelected = selectedExtras.includes(extra.value);
+    return `
+      <button class="qt-extra-btn${isSelected ? " is-selected" : ""}" data-extra-value="${extra.value}" type="button">
+        ${extra.label}
       </button>
     `;
-  }
+  }).join("");
 
-  let accessOptionsHtml = `<option value="">${step.accessPlaceholder || "Select access"}</option>`;
-  for (const option of step.accessOptions) {
-    const selectedAttr = accessValue === option.value ? "selected" : "";
-    accessOptionsHtml += `<option value="${option.value}" ${selectedAttr}>${option.label}</option>`;
-  }
+  const accessOptionsHtml = accessOptions.map((opt) =>
+    `<option value="${opt.value}" ${selectedAccess === opt.value ? "selected" : ""}>${opt.label}</option>`
+  ).join("");
+
+  const dateButtons = dateOptions.map((opt) => {
+    const isSelected = selectedDateType === opt.value;
+    return `
+      <button class="qt-date-btn${isSelected ? " is-selected" : ""}" data-date-type="${opt.value}" type="button">
+        ${opt.label}
+      </button>
+    `;
+  }).join("");
+
+  const exactDateInput = selectedDateType === "exact"
+    ? `<input class="qt-input qt-date-input" id="qt-exact-date" type="date" value="${state.answers.exact_move_date || ""}" />`
+    : "";
+
+  const approxMonthInput = selectedDateType === "approx"
+    ? `<input class="qt-input qt-date-input" id="qt-approx-month" type="month" value="${state.answers.approx_move_month || ""}" />`
+    : "";
+
+  const sliderHtml = sliders.length > 0 ? `
+    <div class="qt-field">
+      <label class="qt-label">${sliders[0].label}</label>
+      <div class="qt-slider-row">
+        <input class="qt-slider" id="qt-large-items" type="range"
+          min="${sliders[0].min}" max="${sliders[0].max}" step="${sliders[0].step}"
+          value="${largeItems}" />
+        <span class="qt-slider-value">${largeItems}</span>
+      </div>
+    </div>
+  ` : "";
+
+  const isValid = isMoveDetailsValid();
 
   return `
     <div class="qt-shell">
       ${renderTopChrome()}
-
-      <div class="qt-section-card">
-        <div class="qt-kicker">When are you moving?</div>
-        <div class="qt-toggle-group">
-          <button class="qt-toggle ${selectedType === "exact" ? "is-selected" : ""}" data-date-type="exact" type="button">Exact date</button>
-          <button class="qt-toggle ${selectedType === "approx" ? "is-selected" : ""}" data-date-type="approx" type="button">Estimated month</button>
-          <button class="qt-toggle ${selectedType === "not_sure" ? "is-selected" : ""}" data-date-type="not_sure" type="button">ASAP</button>
+      <div class="qt-body">
+        ${renderStepLabel()}
+        <div class="qt-heading">${step.title}</div>
+        ${step.subtitle ? `<div class="qt-subheading">${step.subtitle}</div>` : ""}
+        <div class="qt-field">
+          <label class="qt-label">Any extras?</label>
+          <div class="qt-extras-grid">${extraButtons}</div>
         </div>
-
-        <div class="qt-date-fields">
-          ${
-            selectedType === "exact"
-              ? `<input class="qt-select-input" id="qt-exact-date" type="date" value="${exactDate}" />`
-              : ""
-          }
-          ${
-            selectedType === "approx"
-              ? `<input class="qt-select-input" id="qt-approx-month" type="month" value="${approxMonth}" />`
-              : ""
-          }
+        <div class="qt-field">
+          <label class="qt-label">Access type</label>
+          <select class="qt-select" id="qt-access-select">
+            <option value="">Select access type</option>
+            ${accessOptionsHtml}
+          </select>
         </div>
-      </div>
-
-      <div class="qt-section-card">
-        <div class="qt-kicker">${step.accessLabel || "Access / parking details"}</div>
-        <select class="qt-select-input" id="qt-access-select">
-          ${accessOptionsHtml}
-        </select>
-      </div>
-
-      <div class="qt-services-block">
-        <div class="qt-kicker">Additional services</div>
-        <div class="qt-section-helper">${step.extrasHelper || ""}</div>
-        <div class="qt-services-grid">
-          ${extrasHtml}
+        <div class="qt-field">
+          <label class="qt-label">Move date</label>
+          <div class="qt-date-buttons">${dateButtons}</div>
+          ${exactDateInput}
+          ${approxMonthInput}
         </div>
+        ${sliderHtml}
       </div>
-
-      <div class="qt-refine-card">
-        <div class="qt-kicker">Refine your estimate (optional)</div>
-        <div class="qt-section-helper">${step.refineHelper || ""}</div>
-        ${renderSliderRow(
-          step.sliders[0].label,
-          step.sliders[0].helper,
-          "qt-large-items",
-          largeItems,
-          0,
-          20
-        )}
-      </div>
-
-      <div class="qt-footer-actions">
-        <button class="qt-btn qt-btn-secondary" id="qt-back">Back</button>
-        <button class="qt-btn qt-btn-primary" id="qt-next" ${isMoveDetailsValid() ? "" : "disabled"}>Calculate estimate</button>
+      <div class="qt-footer">
+        <button id="qt-back" class="qt-btn qt-btn--ghost" type="button">Back</button>
+        <button id="qt-next" class="qt-btn qt-btn--primary" type="button" ${!isValid ? "disabled" : ""}>Next</button>
       </div>
     </div>
   `;
 }
 
-function renderEstimate() {
-  const estimate = calculateEstimate();
-  const fromValue = getAddressLabel("moving_from");
-  const toValue = getAddressLabel("moving_to");
-  const propertyValue = state.answers.property_size;
-  const extras = state.answers.extras || [];
+function renderEstimate(step) {
+  const { min, max } = calculateEstimate();
   const distanceText = getDistanceMilesText();
 
   return `
     <div class="qt-shell">
       ${renderTopChrome()}
-
-      <div class="qt-estimate-hero">
-        <div class="qt-kicker qt-kicker-centered">Estimated cost</div>
-        <div class="qt-estimate-number qt-estimate-number-single">£${estimate.min.toLocaleString()} – £${estimate.max.toLocaleString()}</div>
-        <div class="qt-estimate-caption">Final price confirmed after survey</div>
-      </div>
-
-      <div class="qt-summary-card">
-        <div class="qt-summary-line">
-          <span>Property</span>
-          <strong>${formatPropertySize(propertyValue)}</strong>
-        </div>
-        <div class="qt-summary-line">
-          <span>From</span>
-          <strong>${fromValue || "—"}</strong>
-        </div>
-        <div class="qt-summary-line">
-          <span>To</span>
-          <strong>${toValue || "—"}</strong>
-        </div>
-        <div class="qt-summary-line">
-          <span>Distance</span>
-          <strong>${distanceText || "—"}</strong>
-        </div>
-        <div class="qt-summary-line">
-          <span>Extras</span>
-          <strong>${extras.length ? `${extras.length} service${extras.length > 1 ? "s" : ""}` : "None"}</strong>
+      <div class="qt-body">
+        ${renderStepLabel()}
+        <div class="qt-heading">${step.title}</div>
+        ${step.subtitle ? `<div class="qt-subheading">${step.subtitle}</div>` : ""}
+        <div class="qt-estimate-card">
+          <div class="qt-estimate-label">Estimated price range</div>
+          <div class="qt-estimate-range">£${min.toLocaleString()} – £${max.toLocaleString()}</div>
+          ${distanceText ? `<div class="qt-estimate-distance">${distanceText}</div>` : ""}
+          <div class="qt-estimate-note">Price range only · Final quote confirmed after survey</div>
         </div>
       </div>
-
-      <div class="qt-estimate-next">
-        <div class="qt-estimate-next-copy">Ready for a confirmed quote?</div>
-      </div>
-
-      <div class="qt-footer-actions">
-        <button class="qt-btn qt-btn-secondary" id="qt-back">Back</button>
-        <button class="qt-btn qt-btn-primary" id="qt-next">Get my detailed quote</button>
+      <div class="qt-footer">
+        <button id="qt-back" class="qt-btn qt-btn--ghost" type="button">Back</button>
+        <button id="qt-next" class="qt-btn qt-btn--primary" type="button">Get my detailed quote</button>
       </div>
     </div>
   `;
 }
 
-function renderContact() {
-  const fullName = state.answers.contact_name || "";
+function isContactValid() {
+  const name = state.answers.contact_name || "";
   const phone = state.answers.contact_phone || "";
   const email = state.answers.contact_email || "";
-  const notes = state.answers.contact_notes || "";
+  return name.trim() && phone.trim() && email.trim();
+}
 
+function renderContact(step) {
   return `
     <div class="qt-shell">
       ${renderTopChrome()}
-
-      <h1 class="qt-page-title">Almost there</h1>
-      <p class="qt-page-subtitle">We'll send your detailed quote within minutes</p>
-
-      <div class="qt-contact-card">
-        <div class="qt-contact-field">
-          <div class="qt-contact-label">Full name</div>
-          <input class="qt-contact-input" id="qt-contact-name" type="text" placeholder="John Smith" value="${fullName}" />
-        </div>
-
-        <div class="qt-contact-field">
-          <div class="qt-contact-label">Email</div>
-          <input class="qt-contact-input" id="qt-contact-email" type="email" placeholder="john@example.com" value="${email}" />
-        </div>
-
-        <div class="qt-contact-field">
-          <div class="qt-contact-label">Phone</div>
-          <input class="qt-contact-input" id="qt-contact-phone" type="tel" placeholder="07700 900000" value="${phone}" />
-        </div>
-
-        <div class="qt-contact-field">
-          <div class="qt-contact-label">Notes (optional)</div>
-          <textarea class="qt-contact-input qt-contact-textarea" id="qt-contact-notes" placeholder="Anything we should know?">${notes}</textarea>
+      <div class="qt-body">
+        ${renderStepLabel()}
+        <div class="qt-heading">${step.title}</div>
+        ${step.subtitle ? `<div class="qt-subheading">${step.subtitle}</div>` : ""}
+        <div class="qt-contact-fields">
+          <div class="qt-field">
+            <label class="qt-label" for="qt-contact-name">Your name</label>
+            <input class="qt-input" id="qt-contact-name" type="text" placeholder="Full name" value="${state.answers.contact_name || ""}" />
+          </div>
+          <div class="qt-field">
+            <label class="qt-label" for="qt-contact-phone">Phone number</label>
+            <input class="qt-input" id="qt-contact-phone" type="tel" placeholder="07700 000000" value="${state.answers.contact_phone || ""}" />
+          </div>
+          <div class="qt-field">
+            <label class="qt-label" for="qt-contact-email">Email address</label>
+            <input class="qt-input" id="qt-contact-email" type="email" placeholder="you@example.com" value="${state.answers.contact_email || ""}" />
+          </div>
+          <div class="qt-field">
+            <label class="qt-label" for="qt-contact-notes">Anything else we should know? <span class="qt-optional">(optional)</span></label>
+            <textarea class="qt-input qt-textarea" id="qt-contact-notes" placeholder="e.g. fragile items, parking notes...">${state.answers.contact_notes || ""}</textarea>
+          </div>
         </div>
       </div>
-
-      <div class="qt-footer-actions">
-        <button class="qt-btn qt-btn-secondary" id="qt-back">Back</button>
-        <button class="qt-btn qt-btn-primary" id="qt-next" ${isContactValid() ? "" : "disabled"}>Send request</button>
+      <div class="qt-footer">
+        <button id="qt-back" class="qt-btn qt-btn--ghost" type="button">Back</button>
+        <button id="qt-next" class="qt-btn qt-btn--primary" type="button" ${!isContactValid() ? "disabled" : ""}>Submit enquiry</button>
       </div>
     </div>
   `;
 }
 
-function renderThankYou() {
+function renderThankYou(step) {
   return `
     <div class="qt-shell">
-      ${renderSegmentProgress()}
-
-      <div class="qt-success-wrap">
-        <div class="qt-success-icon">✓</div>
-        <h1 class="qt-success-title">You're all set</h1>
-        <p class="qt-success-subtitle">
-          We've received your request. One of our moving consultants will review your move and be in touch within 24 hours to arrange a video or in-person survey where needed.
-        </p>
-
-        <div class="qt-next-steps-card">
-          <div class="qt-kicker qt-kicker-centered">What happens next</div>
-
-          <div class="qt-next-step">
-            <span class="qt-next-step-number">1</span>
-            <span>We review your move details</span>
-          </div>
-
-          <div class="qt-next-step">
-            <span class="qt-next-step-number">2</span>
-            <span>We arrange a video or in-person survey if needed</span>
-          </div>
-
-          <div class="qt-next-step">
-            <span class="qt-next-step-number">3</span>
-            <span>Receive your final, fixed-price quote</span>
-          </div>
+      ${renderHeader()}
+      <div class="qt-body qt-body--centered">
+        <div class="qt-thankyou-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M8 12.5l3 3 5-5.5"></path>
+          </svg>
         </div>
-
-        <button class="qt-restart-link" id="qt-restart" type="button">Start a new estimate →</button>
+        <div class="qt-heading">${step.title}</div>
+        ${step.subtitle ? `<div class="qt-subheading">${step.subtitle}</div>` : ""}
+      </div>
+      <div class="qt-footer">
+        <button id="qt-restart" class="qt-btn qt-btn--ghost" type="button">Start again</button>
       </div>
     </div>
   `;
@@ -651,31 +562,27 @@ function renderThankYou() {
 
 function renderStep(step) {
   if (step.type === "single-select") return renderSingleSelect(step);
-  if (step.type === "addresses") return renderAddresses();
+  if (step.type === "addresses") return renderAddresses(step);
   if (step.type === "move-details") return renderMoveDetails(step);
-  if (step.type === "estimate") return renderEstimate();
-  if (step.type === "contact") return renderContact();
-  if (step.type === "thank-you") return renderThankYou();
-
-  return `
-    <div class="qt-shell">
-      <h2>Error</h2>
-      <p>Unsupported step type: ${step.type}</p>
-    </div>
-  `;
+  if (step.type === "estimate") return renderEstimate(step);
+  if (step.type === "contact") return renderContact(step);
+  if (step.type === "thank-you") return renderThankYou(step);
+  return `<div class="qt-shell"><p>Unknown step type: ${step.type}</p></div>`;
 }
 
-function goToNextStep() {
-  if (!currentConfig) return;
+async function goToNextStep() {
   if (state.currentStep < currentConfig.steps.length - 1) {
-    state.currentStep += 1;
+    if (currentConfig.steps[state.currentStep].type === "addresses") {
+      await tryAutoAssignDistanceBand();
+    }
+    state.currentStep++;
     renderCurrentStep();
   }
 }
 
 function goToPreviousStep() {
   if (state.currentStep > 0) {
-    state.currentStep -= 1;
+    state.currentStep--;
     renderCurrentStep();
   }
 }
@@ -683,68 +590,33 @@ function goToPreviousStep() {
 function restartTool() {
   state.currentStep = 0;
   state.answers = {};
-  sessionStorage.removeItem("estimatorSession");
   renderCurrentStep();
-}
-
-function isContactValid() {
-  const name = (state.answers.contact_name || "").trim();
-  const phone = (state.answers.contact_phone || "").trim();
-  const email = (state.answers.contact_email || "").trim();
-  return !!(name && phone && email);
-}
-
-function isMoveDetailsValid() {
-  const accessValid = !!state.answers.access_type;
-  const type = state.answers.move_date_type;
-
-  let dateValid = false;
-  if (type === "exact") dateValid = !!state.answers.exact_move_date;
-  if (type === "approx") dateValid = !!state.answers.approx_move_month;
-  if (type === "not_sure") dateValid = true;
-
-  return accessValid && dateValid;
 }
 
 function initAddressAutocomplete(inputId, answerKey, nextButton) {
   const input = document.getElementById(inputId);
-  if (!input || !googleMapsReady || !window.google || !google.maps || !google.maps.places) {
-    return;
-  }
+  if (!input || !window.google || !google.maps || !google.maps.places) return;
 
   const autocomplete = new google.maps.places.Autocomplete(input, {
-    fields: ["formatted_address", "geometry", "place_id", "address_components"],
-    componentRestrictions: { country: ["gb"] }
+    componentRestrictions: { country: "gb" },
+    fields: ["formatted_address"]
   });
 
-  autocomplete.addListener("place_changed", async () => {
+  autocomplete.addListener("place_changed", function () {
     const place = autocomplete.getPlace();
-
-    state.answers[answerKey] = {
-      label: place.formatted_address || input.value,
-      placeId: place.place_id || "",
-      lat: place.geometry?.location?.lat?.() || null,
-      lng: place.geometry?.location?.lng?.() || null
-    };
-
-    const fromFilled = !!state.answers.moving_from?.label;
-    const toFilled = !!state.answers.moving_to?.label;
+    const label = place.formatted_address || input.value;
+    state.answers[answerKey] = { label };
 
     if (nextButton) {
-      nextButton.disabled = !(fromFilled && toFilled);
-    }
-
-    if (fromFilled && toFilled) {
-      await tryAutoAssignDistanceBand();
+      const other = answerKey === "moving_from"
+        ? getAddressLabel("moving_to")
+        : getAddressLabel("moving_from");
+      nextButton.disabled = !(label && other);
     }
   });
 }
 
 function attachAutocompleteIfNeeded() {
-  if (!currentConfig) return;
-  const step = currentConfig.steps[state.currentStep];
-  if (!step || step.type !== "addresses") return;
-
   const fromInput = document.getElementById("qt-moving-from");
   const toInput = document.getElementById("qt-moving-to");
   const nextButton = document.getElementById("qt-next");
