@@ -14,6 +14,13 @@ const TRACKING_URL = "https://script.google.com/macros/s/AKfycbwnkMTJGHoXqkuIIi3
 const CUSTOMER_ID = "benchcreative-removals";
 const PAGE_ID = "removals";
 
+function getRefFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("ref") || "";
+}
+
+const SOURCE_REF = getRefFromUrl();
+
 function getSessionId() {
   let session = sessionStorage.getItem("estimatorSession");
 
