@@ -10,7 +10,7 @@ let googleMapsReady = false;
    Tracking
 ========================= */
 
-const TRACKING_URL = "https://script.google.com/macros/s/AKfycbwnkMTJGHoXqkuIIi3diKhq35Fkviz5p1RDuu-mWLbkh4Sl6FoR3IFbRMAiFexi0oEj/exec";
+const TRACKING_URL = "https://script.google.com/macros/s/AKfycbySZc7Rj7dwLqhLh-ZU0F0A7ssePMr5DQ2ga8gPjGrylFST4Oh13KwHO4I5k7dnPjeg/exec";
 const CUSTOMER_ID = "benchcreative-removals";
 const PAGE_ID = "removals";
 
